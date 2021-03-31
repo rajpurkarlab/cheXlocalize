@@ -26,7 +26,7 @@ pip install -r requirements.txt
 <a name="segm"></a>
 
 ## Generate Segmentations from Saliency Heatmap
-We provided the code to generate binary segmentations from saliency heatmaps using a thresholding scheme. The technical details can be found in the Method section of our paper manuscript. To save the binary segmentations efficiently, we used RLE format for storage and the encoding is implemented using the toolbox provided in COCO detection challenge [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
+We provided the code to generate binary segmentations from saliency heatmaps using a thresholding scheme. The technical details can be found in the Method section of our paper manuscript. To save the binary segmentations efficiently, we used RLE format for storage and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
 ### Usage 
 
