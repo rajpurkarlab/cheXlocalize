@@ -1,10 +1,29 @@
 ![LOGO](/img/CheXplanation.svg)
 
-This the repo referenced in the paper, "Deep learning saliency maps do not accurately highlight diagnostically relevant regions for medical image interpretation". We provided the source code used for initial data preprocessing, generating segmentations from saliency maps and evaluating localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/).
+This the repo referenced in the paper, "Deep learning saliency maps do not accurately highlight diagnostically relevant regions for medical image interpretation". We provided the source code used for initial data preprocessing, generating segmentations from saliency maps and evaluating localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/) (coming up soon). 
 
-## Quick start
-### Train and save a model 
-`python main.py train --<hyperparameter> value`
+### Table of Contents
+
+- [Prerequisites](#prereqs)
+- [Generate Segmentations from Saliency Heatmap](#segm)
+- [Evaluation of Localization](#eval)
+- [License](#license)
+- [Citing](#citing)
+
+---
+
+<a name="prereqs"></a>
+
+## Prerequisites
+
+The code should be run using Python 3.7.6.
+
+Before starting, please install the repo Python requirements using the following command:
+```
+pip install -r requirements.txt
+```
+
+<a name="natural"></a>
 
 ### Test existing model 
 `python main.py test --checkpoint_path <path to checkpoint>`
