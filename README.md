@@ -37,10 +37,10 @@ python segmentation/pred_segmentation.py [OPTIONS]
 
 Options:
 --phase			Use validation or test data
---method   	The saliency methods used
---model     Single or ensemble
---if_threshold Whether the thresholding scheme is adopted.
---save_dir Path where the RLE-formatted segmentations are stored.
+--method   		The saliency methods used
+--model     		Single or ensemble
+--if_threshold 		Whether the thresholding scheme is adopted.
+--save_dir 		Path where the RLE-formatted segmentations are stored.
 ```
 
 <a name="synthetic"></a>
@@ -55,9 +55,9 @@ Our evaluation script generated the summary metrics (mIoU) per localization task
 Usage: python eval.py [OPTIONS]
 
 Options:
-    --phase      Use validation or test data.
-    --pred_path Path to which the segmentation json file is stored.
-    --save_dir Path to which the summary csv is stored.
+    --phase      	Use validation or test data.
+    --pred_path 	Path to which the segmentation json file is stored.
+    --save_dir 		Path to which the summary csv is stored.
 ```
 
 
