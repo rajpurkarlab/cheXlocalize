@@ -1,5 +1,6 @@
 ![LOGO](/img/CheXplanation.svg)
 
+This the repo referenced in the paper, "Deep learning saliency maps do not accurately highlight diagnostically relevant regions for medical image interpretation". We provided the source code used for initial data preprocessing, generating segmentations from saliency maps and evaluating localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/).
 
 ## Quick start
 ### Train and save a model 
