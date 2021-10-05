@@ -49,11 +49,18 @@ Our evaluation script generates the two summary metrics (mIoU and hit rate) for 
 ### Usage
 
 ```
-Usage: python eval.py [OPTIONS]
+Usage: python eval_miou.py [OPTIONS]
 
 Options:
     --phase      	Use validation or test data.
-    --pred_path 	Path to which the segmentation json file is stored.
+    --save_dir 		Path to which the summary csv is stored.
+```
+
+```
+Usage: python eval_ptgame.py [OPTIONS]
+
+Options:
+    --phase      	Use validation or test data.
     --save_dir 		Path to which the summary csv is stored.
 ```
 
