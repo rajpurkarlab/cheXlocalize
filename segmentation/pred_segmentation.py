@@ -1,6 +1,6 @@
 """ Converts saliency heatmap to segmentation for each method. Stored as encoded COCO binary mask in a json file. 
     
-    Usage: python3 pred_segmentation.py --phase valid --method gradcam --model_type single
+    Usage: python3 pred_segmentation.py --phase val --method gradcam --model_type single
 """
 
 from argparse import ArgumentParser

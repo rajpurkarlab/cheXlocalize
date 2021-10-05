@@ -9,26 +9,6 @@ from scipy.ndimage.filters import gaussian_filter, uniform_filter
 from eval_constants import *
 
 
-def iou_seg(mask1, mask2):
-    """
-    Calculate iou scores of two segmentation masks
-
-    Args: 
-        mask1 (np.array): binary segmentation mask
-        mask2 (np.array): binary segmentation mask
-    Returns:
-        iou score (a scalar)
-    """
-    intersection = np.logical_and(mask1, mask2)
-    union = np.logical_or(mask1, mask2)
-
-    if np.sum(union) == 0:
-        iou_score = np.nan  # used to be -1
-    else:
-        iou_score = np.sum(intersection) / (np.sum(union))
-    return iou_score
-
-
 def create_mask(polygons, img_dims):
     """
     Creates a binary mask (of the original matrix   size) given a list of polygons
