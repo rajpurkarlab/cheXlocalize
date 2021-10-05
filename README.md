@@ -1,6 +1,6 @@
 ![LOGO](/img/CheXplanation.svg)
 
-This the repo referenced in the paper, "Deep learning saliency maps do not accurately highlight diagnostically relevant regions for medical image interpretation". We provided the source code used for initial data preprocessing, generating segmentations from saliency maps and evaluating localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/) (coming up soon). 
+This the code repo referenced in the paper, "Benchmarking saliency methods for chest X-ray interpretation ". We provided the source code used for initial data preprocessing, generating segmentations from saliency maps and evaluating localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/) (coming up soon). 
 
 ### Table of Contents
 
@@ -28,9 +28,6 @@ pip install -r requirements.txt
 ## Generate Segmentations from Saliency Heatmap
 We provided the code to generate binary segmentations from saliency heatmaps using a thresholding scheme. The technical details can be found in the Method section of our paper manuscript. To save the binary segmentations efficiently, we used RLE format for storage and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
-### Usage 
-
-We explored with multiple saliency methods such as Grad-CAM and Intergrated Gradients. Although our paper only highlighted Grad-CAM, the code works on multiple methods
 
 ```
 python segmentation/pred_segmentation.py [OPTIONS]
@@ -47,7 +44,7 @@ Options:
 
 ## Evaluating Localization using Semantic Segmentation Scheme.
 
-Our evaluation script generated the summary metrics (mIoU) per localization task and the 95% bootstrap confidence interval.
+Our evaluation script generates the two summary metrics (mIoU and hit rate) for each localization task, as well as the corresponding 95% bootstrap confidence interval (n_boostrap_sample = 1000). 
 
 ### Usage
 
