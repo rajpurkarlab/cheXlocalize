@@ -1,6 +1,6 @@
 ![LOGO](/img/CheXplanation.svg)
 
-This the code repo referenced in the paper, "Benchmarking saliency methods for chest X-ray interpretation ". We provided the source code used for initial data preprocessing, generating segmentations from saliency maps and evaluating localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/) (coming up soon). 
+This the code repo referenced in the paper, "Benchmarking saliency methods for chest X-ray interpretation ". We provided the source code used for evaluation of saliency map localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/) (coming up soon). 
 
 ### Table of Contents
 
