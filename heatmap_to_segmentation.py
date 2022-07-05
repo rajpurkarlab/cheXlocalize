@@ -14,21 +14,22 @@ import sys
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from eval_helper import encode_segmentation
-from eval_constants import *
+from eval_constants import LOCALIZATION_TASKS
+from utils import encode_segmentation
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def cam_to_segmentation(cam_mask):
     """
-    Convert a saliency heatmap to binary segmentation mask
+    Convert a saliency heat map to binary segmentation mask.
 
     Args:
-        cam_mask(torch.Tensor): heatmap of the original image size. dim: H x W. Will squeeze the tensor if there are more than two dimensions
+        cam_mask (torch.Tensor): heat map in the original image size (H x W).
+            Will squeeze the tensor if there are more than two dimensions.
 
     Returns:
-        segmentation_output(np.array): binary segmentation output
+        segmentation_output (np.array): binary segmentation output
     """
     if (len(cam_mask.size()) > 2):
         cam_mask = cam_mask.squeeze()
@@ -50,19 +51,19 @@ def cam_to_segmentation(cam_mask):
 
 def pkl_to_mask(pkl_path, task):
     """
-    # Load a pickle file, get saliency map and resize to original image dimension. 
-    Convert to binary segmentation and output the encoded mask
+    Load pickle file, get saliency map and resize to original image dimension.
+    Convert to binary segmentation and output the encoded mask.
 
     Args:
-        pkl_path(str): path to the model output pickle file
-        task(str): localization task
+        pkl_path (str): path to the model output pickle file
+        task (str): localization task
     """
     # load pickle file, get saliency map and resize
     info = pickle.load(open(pkl_path, 'rb'))
     saliency_map = info['map']
     img_dims = info['cxr_dims']
-    map_resized = F.interpolate(saliency_map, size=(
-        img_dims[1], img_dims[0]), mode='bilinear', align_corners=False)
+    map_resized = F.interpolate(saliency_map, size=(img_dims[1], img_dims[0]),
+                                mode='bilinear', align_corners=False)
 
     # convert to segmentation
     segmentation = cam_to_segmentation(map_resized)
@@ -72,22 +73,16 @@ def pkl_to_mask(pkl_path, task):
     return encoded_mask
 
 
-def heatmap_to_mask(map_dir, output_file_name):
+def heatmap_to_mask(map_dir, output_path):
     """
-    Converts all saliency maps to segmentations and store segmentations in a json file. 
-
-    Args:
-        map_dir(str): where the model output pickle files are saved
-        output_file_name(str): json file where the encoded segmentation masks are stored
+    Converts all saliency maps to segmentations and stores segmentations in a
+    json file.
     """
-
-    print("Parsing saliency maps")
-    all_paths = list(Path(map_dir).rglob("*_map.pkl"))
+    print('Parsing saliency maps')
+    all_paths = list(Path(map_dir).rglob('*_map.pkl'))
 
     results = {}
-
     for pkl_path in tqdm(all_paths):
-
         # break down path to image name and task
         path = str(pkl_path).split('/')
         task = path[-1].split('_')[-2]
@@ -99,7 +94,7 @@ def heatmap_to_mask(map_dir, output_file_name):
         # get encoded segmentation mask
         encoded_mask = pkl_to_mask(pkl_path, task)
 
-        # add image and segmentation to submission dictionary
+        # add image and segmentation to results dict
         if img_id in results:
             if task in results[img_id]:
                 print(f'Check for duplicates for {task} for {img_id}')
@@ -111,9 +106,9 @@ def heatmap_to_mask(map_dir, output_file_name):
             results[img_id][task] = encoded_mask
 
     # save to json
-    with open(output_file_name, "w") as f:
+    with open(output_path, 'w') as f:
         json.dump(results, f)
-    print(f'Segmentation masks (in RLE format) saved at {output_file_name}')
+    print(f'Segmentation masks (in RLE format) saved to {output_path}')
 
 
 if __name__ == '__main__':
