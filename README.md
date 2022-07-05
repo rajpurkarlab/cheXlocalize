@@ -1,14 +1,11 @@
 ![LOGO](/img/CheXplanation.svg)
 
-TODO: update logo above, and make sure this section makes sense after you go through the code
+TODO: UPDATE ABOVE LOGO
+TODO: UPDATE THIS SECTION BELOW
 
-This repository contains the code used to generate segmentations from saliency method heatmaps and to evaluate the localization performance of those segmentations on the CheXlocalize dataset, as described in the paper _Benchmarking saliency methods for chest X-ray interpretation_. [TODO: add link]
+This repository contains the code used to generate segmentations from saliency method heat maps and human annotations, and to evaluate the localization performance of those segmentations, as described in the paper _Benchmarking saliency methods for chest X-ray interpretation_. [TODO: add link]
 
-To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/).
-
-
-Typical install time: ~5 minutes
-Expected run time for demo: ~20 minutes
+You may run the scripts in this repo using your own heat maps/annotations/segmentations, or you may run them on the CheXlocalize dataset. TODO: ADD LINK.
 
 ### Table of Contents
 - [Overview](#overview)
@@ -16,14 +13,19 @@ Expected run time for demo: ~20 minutes
 - [Download data](#download)
 - [Generate segmentations from saliency method heatmaps](#heatmap_to_segm)
 - [Generate segmentations from human annotations](#ann_to_segm)
-- [Evaluation of localization performance](#eval)
-- [Citing](#citing)
-
----
+- [Evaluate localization performance](#eval)
+- [Citation](#citation)
 
 <a name="overview"></a>
 ## Overview
-TODO: ADD
+
+While deep learning has enabled automated medical imaging interpretation at a level shown to surpass that of practicing experts, the "black box" nature of neural networks represents a barrier to physicians’ trust and model adoption in the clinical setting. Therefore, to encourage the development and validation of more "interpretable" models for chest X-ray interpretation, we present a new radiologist-annotated segmentation dataset.
+
+CheXlocalize (TODO: ADD LINK) is a radiologist-annotated segmentation dataset on chest X-rays. The dataset consists of two types of radiologist annotations for the localization of 10 pathologies: pixel-level segmentations and most-representative points. Annotations were drawn on images from the [CheXpert](https://stanfordmlgroup.github.io/competitions/chexpert/) validation and test sets. The dataset also consists of two separate sets of radiologist annotations: (1) ground-truth pixel-level segmentations on the validation and test sets, drawn by two board-certified radiologists, and (2) benchmark pixel-level segmentations and most-representative points on the test set, drawn by a separate group of three board-certified radiologists.
+
+The validation and test sets consist of 234 chest X-rays from 200 patients and 668 chest X-rays from 500 patients, respectively. The 10 pathologies of interest were Atelectasis, Cardiomegaly, Consolidation, Edema, Enlarged Cardiomediastinum, Lung Lesion, Lung Opacity, Pleural Effusion, Pneumothorax, and Support Devices.
+
+For more details, please see our paper, [Benchmarking saliency methods for chest X-ray interpretation](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
 
 <a name="setup"></a>
 ## Setup
@@ -89,7 +91,7 @@ We also released the code to generate segmentation masks from annotations (a lis
 The input annotation json file only includes images and pathologies that have a ground truth annotation. In the output segmentation json file, we index all images and all pathologies. If an image has no saliency segmentations, we store a segmentation mask of all zeros.
 
 <a name="eval"></a>
-## Evaluate segmentations
+## Evaluate localization performance
 
 We use two evaluation metrics to compare segmentations (TODO: add Fig. 1b):
 - **mIoU**: mean Intersection over Union is a stricter metric that measures how much, on average, the predicted segmentations overlap with the ground-truth segmentations.
@@ -112,11 +114,12 @@ Mention that they should be encode, the masks should be encoded binary masks usi
 
 Our evaluation script generates the two summary metrics (mIoU and hit rate) for each localization task, as well as the corresponding 95% bootstrap confidence interval (n_boostrap_sample = 1000). 
 
-<a name="citing"></a>
+<a name="citation"></a>
 
-## Citing
+## Citation
 TODO: UPDATE THIS
-If you are using the CheXphoto dataset, please cite this paper:
+
+If you are using the CheXlocalize dataset, or are using our code in your research, please cite our paper:
 
 ```
 @article {Saporta2021.02.28.21252634,
@@ -131,5 +134,4 @@ If you are using the CheXphoto dataset, please cite this paper:
 	eprint = {https://www.medrxiv.org/content/early/2021/10/08/2021.02.28.21252634.full.pdf},
 	journal = {medRxiv}
 }
-
 ```
