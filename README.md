@@ -27,7 +27,7 @@ CheXlocalize (TODO: ADD LINK) is a radiologist-annotated segmentation dataset on
 
 The validation and test sets consist of 234 chest X-rays from 200 patients and 668 chest X-rays from 500 patients, respectively. The 10 pathologies of interest were Atelectasis, Cardiomegaly, Consolidation, Edema, Enlarged Cardiomediastinum, Lung Lesion, Lung Opacity, Pleural Effusion, Pneumothorax, and Support Devices.
 
-For more details, please see our paper, [Benchmarking saliency methods for chest X-ray interpretation](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
+For more details, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
 
 <a name="setup"></a>
 ## Setup
@@ -68,16 +68,23 @@ If you downloaded the CheXlocalize dataset, then these pickle files are in `/che
 
 ```
 {
+# DenseNet121 + Grad-CAM heat map <torch.Tensor> of shape (1, 1, h, w) #TODO: is this right?
 'map': tensor([[[[1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
            	 [1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
-           	 [1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
            	 ...,
-           	 [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 7.9709e-05, 7.9709e-05, 7.9709e-05],
     		 [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 7.9709e-05, 7.9709e-05, 7.9709e-05],
-           	 [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 7.9709e-05, 7.9709e-05, 7.9709e-05]]]]), # DenseNet121 + Grad-CAM heat map <torch.Tensor> of shape (1, 1, h, w) #TODO: is this right?
-'prob': 0.02029409697279334, # model probability (float)
-'task': Consolidation, # one of the ten possible pathologies (string)
-'gt': 0, # 0 if ground-truth label for 'task' is negative, 1 if positive
+           	 [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 7.9709e-05, 7.9709e-05, 7.9709e-05]]]]),
+
+# model probability (float)
+'prob': 0.02029409697279334,
+
+# one of the ten possible pathologies (string)
+'task': Consolidation,
+
+# 0 if ground-truth label for 'task' is negative, 1 if positive
+'gt': 0,
+
+# original cxr image
 'cxr_img': tensor([[[0.7490, 0.7412, 0.7490,  ..., 0.8196, 0.8196, 0.8118],
   		    [0.6627, 0.6627, 0.6706,  ..., 0.7373, 0.7137, 0.6941],
           	    [0.5137, 0.5176, 0.5294,  ..., 0.6000, 0.5686, 0.5255],
@@ -85,23 +92,17 @@ If you downloaded the CheXlocalize dataset, then these pickle files are in `/che
           	    [0.7294, 0.7725, 0.7804,  ..., 0.2941, 0.2549, 0.2078],
           	    [0.7804, 0.8157, 0.8157,  ..., 0.3216, 0.2824, 0.2510],
           	    [0.8353, 0.8431, 0.8549,  ..., 0.3725, 0.3412, 0.3137]],
-
+          	    ...
          	   [[0.7490, 0.7412, 0.7490,  ..., 0.8196, 0.8196, 0.8118],
           	    [0.6627, 0.6627, 0.6706,  ..., 0.7373, 0.7137, 0.6941],
           	    [0.5137, 0.5176, 0.5294,  ..., 0.6000, 0.5686, 0.5255],
           	    ...,
           	    [0.7294, 0.7725, 0.7804,  ..., 0.2941, 0.2549, 0.2078],
           	    [0.7804, 0.8157, 0.8157,  ..., 0.3216, 0.2824, 0.2510],
-          	    [0.8353, 0.8431, 0.8549,  ..., 0.3725, 0.3412, 0.3137]],
+          	    [0.8353, 0.8431, 0.8549,  ..., 0.3725, 0.3412, 0.3137]]]),
 
-         	   [[0.7490, 0.7412, 0.7490,  ..., 0.8196, 0.8196, 0.8118],
-          	    [0.6627, 0.6627, 0.6706,  ..., 0.7373, 0.7137, 0.6941],
-          	    [0.5137, 0.5176, 0.5294,  ..., 0.6000, 0.5686, 0.5255],
-          	    ...,
-          	    [0.7294, 0.7725, 0.7804,  ..., 0.2941, 0.2549, 0.2078],
-          	    [0.7804, 0.8157, 0.8157,  ..., 0.3216, 0.2824, 0.2510],
-          	    [0.8353, 0.8431, 0.8549,  ..., 0.3725, 0.3412, 0.3137]]]), # original cxr image
-'cxr_dims': (2022, 1751) # dimensions of original cxr (h, w)
+# dimensions of original cxr (h, w)
+'cxr_dims': (2022, 1751)
 }
 ```
 
@@ -155,7 +156,7 @@ If you downloaded the CheXlocalize dataset, then this is the json file `/chexloc
 
 Each pathology key (e.g. `json_dict['patient64622_study1_view1_frontal']['Support Devices']`) is associated with a nested list of contours and coordinates: `[[coordinates for contour 1], [coordinates for contour 2]]`. The number of contours corresponds to the number of segmentations on a CXR for a given pathology. For example, the below CXR has two segmentations (and therefore would have two contours) for Atelectasis.
 
-![example CXR with two segmentations](/img/example_two_segmentations.png)
+![example CXR with two segmentations](/img/example_two_segmentations.png =250x)
 
 Each contour holds a list of [X,Y] coordinates that contour the shape of the pathology.
 
