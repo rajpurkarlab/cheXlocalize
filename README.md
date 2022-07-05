@@ -13,8 +13,7 @@ Expected run time for demo: ~20 minutes
 ### Table of Contents
 - [Overview](#overview)
 - [Setup](#setup)
-- [Download segmentations](#download)
-- [Evaluate segmentations](#eval)
+- [Download data](#download)
 - [Generate segmentations from saliency method heatmaps](#heatmap_to_segm)
 - [Generate segmentations from human annotations](#ann_to_segm)
 - [Evaluation of localization performance](#eval)
@@ -29,10 +28,10 @@ TODO: ADD
 <a name="setup"></a>
 ## Setup
 
-The code should be run using Python 3.8.3 If using conda, run:
+The code should be run using Python 3.8.3. If using conda, run:
 ```
 > conda create -n chexlocalize python=3.8.3
-> conda activate
+> conda activate chexlocalize
 (chexlocalize) >
 ```
 
@@ -42,15 +41,19 @@ Install all dependency packages using the following command:
 ```
 
 <a name="download"></a>
-## Download segmentations
+## Download data
 
-You may run the below scripts using your own predicted and ground-truth segmentations, or you may run them on the CheXlocalize dataset.
+You may run the scripts in this repo using your own predicted and ground-truth segmentations, or you may run them on the CheXlocalize dataset.
 
-If you'd like to use the CheXlocalize dataset, download the validation set ground-truth pixel-level segmentations here (TODO: ADD LINK).
+If you'd like to use the CheXlocalize dataset, download (1) the validation set Grad-CAM heat maps, (2) the validation set ground-truth raw radiologist annotations, (3) the validation set ground-truth pixel-level segmentations here: (TODO: ADD LINK).
 
 If you'd like to use your own predicted and ground-truth segmentations, they will need to be in the following format (TODO: ADD FORMAT INSTRUCTIONS).
 
-## Generate Segmentations from Saliency Heatmaps
+<a name="heatmap_to_segm">
+## Generate segmentations from saliency method heatmaps
+
+To generate binary segmentations from saliency method heat maps, 
+
 We provided the code to generate binary segmentations from saliency heatmaps (read about the thresholding scheme in the manuscript). To store the binary segmentations efficiently, we used RLE format and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
 We also made public the Grad-CAM heatmaps that was run on the DenseNet121 Ensemble model for the validation set (Read our paper for model details). The Grad-CAM heatmaps are stored in the .pkl files under ./GradCAM_maps_val/. We also included a sample of the heatmaps in ./GradCAM_maps_val_sample for fast demo (we included three images). Each image id in the validation set has a pickel (.pkl) file associated with each of the ten pathologies. The .pkl files store model probability, saliency map and original image dimensions. 
