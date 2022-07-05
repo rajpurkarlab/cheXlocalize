@@ -1,51 +1,78 @@
 ![LOGO](/img/CheXplanation.svg)
 
-This the code repo referenced in the paper, "Benchmarking saliency methods for chest X-ray interpretation ". We provided the source code used for evaluation of saliency map localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/).
+TODO: update logo above, and make sure this section makes sense after you go through the code
+
+This repository contains the code used to generate segmentations from saliency method heatmaps and to evaluate the localization performance of those segmentations on the CheXlocalize dataset, as described in the paper _Benchmarking saliency methods for chest X-ray interpretation_. [TODO: add link]
+
+To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/).
+
 
 Typical install time: ~5 minutes
 Expected run time for demo: ~20 minutes
 
 ### Table of Contents
-
-- [Prerequisites](#prereqs)
+- [Overview](#overview)
+- [Setup](#setup)
+- [Download segmentations](#download)
+- [Evaluate segmentations](#eval)
 - [Generate Segmentations from Saliency Heatmap](#segm)
-- [Evaluation of Localization](#eval)
-- [License](#license)
 - [Citing](#citing)
 
 ---
 
-<a name="prereqs"></a>
+<a name="overview"></a>
+## Overview
+TODO: ADD
 
-## Prerequisites
+<a name="setup"></a>
+## Setup
 
-The code should be run using Python 3.7.6.
-
-Before starting, please install the repo Python requirements using the following command:
-```
-pip install -r requirements.txt
-```
-
-<a name="segm"></a>
-
-## Generate Segmentations from Saliency Heatmap
-We provided the code to generate binary segmentations from saliency heatmaps using a thresholding scheme. The technical details can be found in the Method section of our paper manuscript. To save the binary segmentations efficiently, we used RLE format for storage and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
-
+The code should be run using Python 3.7.6. If using conda, run:
 
 ```
-python segmentation/pred_segmentation.py [OPTIONS]
-
-Options:
---phase			Use validation or test data
---method   		The saliency methods used
---model     		Single or ensemble
---if_threshold 		Whether the thresholding scheme is adopted.
---save_dir 		Path where the RLE-formatted segmentations are stored.
+> conda create -n chexlocalize python=3.7.6
+> conda activate
+(chexlocalize) >
 ```
 
-<a name="synthetic"></a>
+Install all dependency packages using the following command:
+```
+(chexlocalize) > pip install -r requirements.txt
+```
 
-## Evaluating Localization using Semantic Segmentation Scheme.
+<a name="download"></a>
+## Download segmentations
+
+You may run the below scripts using your own predicted and ground-truth segmentations, or you may run them on the CheXlocalize dataset.
+
+If you'd like to use the CheXlocalize dataset, download the validation set ground-truth pixel-level segmentations here (TODO: ADD LINK).
+
+If you'd like to use your own predicted and ground-truth segmentations, they will need to be in the following format (TODO: ADD FORMAT INSTRUCTIONS).
+
+<a name="eval"></a>
+## Evaluate segmentations
+
+We use two evaluation metrics to compare segmentations (TODO: add Fig. 1b):
+- **mIoU**: mean Intersection over Union is a stricter metric that measures how much, on average, the predicted segmentations overlap with the ground-truth segmentations.
+- **hit rate**: hit rate is a less strict metric that does not require the localization method to locate the full extent of a pathology. Hit rate is based on the pointing game setup, in which credit is given if the most representative point identified by the localization method lies within the ground-truth segmentation. A "hit" indicates that the correct region of the CXR was located regardless of the exact bounds of the binary segmentations. Localization performance is then calculated as the hit rate across the dataset.
+
+To evaluate localization performance using your own predicted and ground-truth segmentations
+
+To run evaluation using mIoU, use the following command:
+
+```
+(chexlocalize) > python3 eval_miou.py
+```
+y is reported on the true positive slice of the
+174 dataset (CXRs that contain both saliency method and human benchmark segmentations
+175 when the ground-truth label of the pathology is positive).
+
+To run evaluation using hit rate, use the following command:
+
+
+To evaluate localization performance using your own predicted and ground-truth segmentations, must be in certain format? TODO: ask what encoded json is?
+Mention that they should be encode, the masks should be encoded binary masks using RLE using pycocotools https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocotools/mask.py
+
 
 Our evaluation script generates the two summary metrics (mIoU and hit rate) for each localization task, as well as the corresponding 95% bootstrap confidence interval (n_boostrap_sample = 1000). 
 
@@ -67,17 +94,28 @@ Options:
     --save_dir 		Path to which the summary csv is stored.
 ```
 
+<a name="segm"></a>
 
-<a name="license"></a>
+## Generate binary segmentations from saliency method heatmaps
+As a reference, we provide the code used generate binary segmentations from saliency method heat maps using a thresholding scheme. The technical details can be found in the Method section of our paper manuscript. To save the binary segmentations efficiently, we used RLE format for storage and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
-## License
 
-This repository is made publicly available under the MIT License.
+```
+python segmentation/pred_segmentation.py [OPTIONS]
+
+Options:
+--phase			Use validation or test data
+--method   		The saliency methods used
+--model     		Single or ensemble
+--if_threshold 		Whether the thresholding scheme is adopted.
+--save_dir 		Path where the RLE-formatted segmentations are stored.
+```
+
 
 <a name="citing"></a>
 
 ## Citing
-
+TODO: UPDATE THIS
 If you are using the CheXphoto dataset, please cite this paper:
 
 ```
@@ -95,5 +133,3 @@ If you are using the CheXphoto dataset, please cite this paper:
 }
 
 ```
-
- 

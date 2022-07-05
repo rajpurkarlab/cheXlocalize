@@ -29,7 +29,6 @@ def calculate_iou(pred_mask, gt_mask, true_pos_only):
     intersection = np.logical_and(pred_mask, gt_mask)
     union = np.logical_or(pred_mask, gt_mask)
 
-    # TODO: just want to make sure I understand this
     if true_pos_only:
         if np.sum(pred_mask) == 0 or np.sum(gt_mask) == 0:
             iou_score = np.nan
@@ -51,7 +50,9 @@ def get_ious(gt_path, pred_path, true_pos_only):
     Args:
         gt_path (str): path to ground-truth segmentation json file (encoded)
         pred_path (str): path to predicted segmentation json file (encoded)
-        true_pos_only (bool): if true, TODO
+        true_pos_only (bool): if true, run evaluation only on the true positive
+                              slice of the dataset (CXRs that contain predicted
+                              and ground-truth segmentations)
 
     Returns:
         ious (dict): dict with 10 keys, one for each pathology (task). Values
@@ -94,22 +95,15 @@ def get_ious(gt_path, pred_path, true_pos_only):
     return ious, cxr_ids
 
 
-def bootstrap_metric(df, num_replicates, metric='iou'):
-    """
-    Create dataframe of bootstrap samples.
-    """
-    # TODO: do we not need to pass in df here?
+def bootstrap_metric(df, num_replicates):
+    """Create dataframe of bootstrap samples."""
     def single_replicate_performances():
         sample_ids = np.random.choice(len(df), size=len(df), replace=True)
         replicate_performances = {}
         df_replicate = df.iloc[sample_ids]
 
-        for task in df.columns:
-            # TODO: it looks like it's doing the same thing regardless of whether it's miou or pointing game?
-            if metric == 'iou':
-                performance = df_replicate[task].mean()
-            else:
-                performance = df_replicate[task].mean()
+        for task in df[LOCALIZATION_TASKS].columns:
+            performance = df_replicate[task].mean()
             replicate_performances[task] = performance
         return replicate_performances
 
@@ -122,7 +116,6 @@ def bootstrap_metric(df, num_replicates, metric='iou'):
     return df_performances
 
 
-# TODO: just want to make sure I understand this
 def compute_cis(series, confidence_level):
     sorted_perfs = series.sort_values()
     lower_index = int(confidence_level/2 * len(sorted_perfs)) - 1
@@ -133,7 +126,6 @@ def compute_cis(series, confidence_level):
     return lower, mean, upper
 
 
-# TODO: what does "perfs" stand for? And is there a reason we're using "name"?
 def create_ci_record(perfs, task):
     lower, mean, upper = compute_cis(perfs, confidence_level = 0.05)
     record = {"name": task,
@@ -161,6 +153,7 @@ def get_hit_rates(gt_path, pred_path):
     TODO: also, it looks like this function expects a different path? like a
     path with a bunch of pkl files. is that right? where do these pkl files come from?
     Calculate hit rate·
+    - We need to figure 
     """
     with open(gt_path) as f:
         gt_dict = json.load(f)
@@ -219,22 +212,22 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     # create save_dir if it does not already exist
     Path(save_dir).mkdir(exist_ok=True,parents=True)
 
+    # TODO: factor this out?
     if metric == 'miou':
         ious, cxr_ids = get_ious(gt_path, pred_path, true_pos_only)
         metric_df = pd.DataFrame.from_dict(ious)
         metric_df['img_id'] = cxr_ids
         metric_df.to_csv(f'{save_dir}/iou_results.csv',index = False)
 
-        # TODO: this function is erroring out for me for some reason
-        bs_df = bootstrap_metric(metric_df, 1000, metric='iou')
+        bs_df = bootstrap_metric(metric_df, 1000)
         bs_df.to_csv(f'{save_dir}/bootstrap_iou_results.csv',index = False)
     elif metric == 'hitrate':
         results, cxr_ids = get_hit_rates(gt_path, pred_path)
         metrics = pd.DataFrame.from_dict(results,orient='index')
-        bs_df= bootstrap_metric(metrics, 1000, metric = "pt_game")
+        bs_df= bootstrap_metric(metrics, 1000)
         bs_df.to_csv(f'{save_dir}/{table_name}_bs_hit.csv',index = False)
         metrics['img_id'] = all_ids
-        metrics.to_csv(f'{save_dir}/{table_name}_hit.csv',index = False)# TODO
+        metrics.to_csv(f'{save_dir}/{table_name}_hit.csv',index = False)
     else:
         raise ValueError('`metric` must be either `miou` or `hitrate`')
 
@@ -250,18 +243,18 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    # TODO: Should we specify that gt_path and pred_path need to be encoded?
     parser.add_argument('--gt_path', type=str,
-                        help='directory where ground-truth segmentations are saved')
+                        help='directory where ground-truth segmentations are \
+                              saved (encoded)')
     parser.add_argument('--pred_path', type=str,
-                        help='directory where predicted segmentations are saved')
+                        help='directory where predicted segmentations are saved \
+                              saved (encoded)')
     parser.add_argument('--metric', type=str,
                         help='options are: miou or hitrate')
     parser.add_argument('--true_pos_only', default="True",
                         help='if true, run evaluation only on the true positive \
-                        slice of the dataset (CXRs that contain predicted \
-                        segmentations when the ground-truth label of the \
-                        pathology is positive)')
+                        slice of the dataset (CXRs that contain predicted and \
+                        ground-truth segmentations)')
     parser.add_argument('--save_dir', default=".",
                         help='where to save evaluation results')
     parser.add_argument('--seed', type=int, default=0,
