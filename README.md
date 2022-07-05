@@ -156,7 +156,7 @@ If you downloaded the CheXlocalize dataset, then this is the json file `/chexloc
 
 Each pathology key (e.g. `json_dict['patient64622_study1_view1_frontal']['Support Devices']`) is associated with a nested list of contours and coordinates: `[[coordinates for contour 1], [coordinates for contour 2]]`. The number of contours corresponds to the number of segmentations on a CXR for a given pathology. For example, the below CXR has two segmentations (and therefore would have two contours) for Atelectasis.
 
-<img src="img/example_two_segmentations.png" alt="example CXR with two segmentations" width="400"/>
+<img src="img/example_two_segmentations.png" alt="example CXR with two segmentations" width="350"/>
 
 Each contour holds a list of [X,Y] coordinates that contour the shape of the pathology.
 
@@ -176,7 +176,13 @@ We use two evaluation metrics to compare segmentations:
 - **hit rate**: hit rate is a less strict metric that does not require the localization method to locate the full extent of a pathology. Hit rate is based on the pointing game setup, in which credit is given if the most representative point identified by the localization method lies within the ground-truth segmentation. A "hit" indicates that the correct region of the CXR was located regardless of the exact bounds of the binary segmentations. Localization performance is then calculated as the hit rate across the dataset.
 
 ![metrics](/img/metrics.png)
-*Left: CXR with ground-truth and saliency method annotations for Pleural Effusion. The segmentations have a low overlap (IoU is 0.078), but pointing game is a "hit" since the saliency method's most representative point is inside of the ground-truth segmentation. Right, CXR with ground-truth and human benchmark annotations for Enlarged Cardiomediastinum. The segmentations have a high overlap (IoU is 0.682), but pointing game is a "miss" since saliency method's most representative point is outside of the ground-truth segmentation.*
+
+<figure>
+	<img src="/img/metrics.png">
+	<figcaption>Left: CXR with ground-truth and saliency method annotations for Pleural Effusion. The segmentations have a low overlap (IoU is 0.078), but pointing game is a "hit" since the saliency method's most representative point is inside of the ground-truth segmentation. Right, CXR with ground-truth and human benchmark annotations for Enlarged Cardiomediastinum. The segmentations have a high overlap (IoU is 0.682), but pointing game is a "miss" since saliency method's most representative point is outside of the ground-truth segmentation.</figcaption>
+</figure>
+
+For more details on mIoU and hit rate, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
 
 To evaluate localization performance using your own predicted and ground-truth segmentations
 
