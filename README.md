@@ -15,7 +15,9 @@ Expected run time for demo: ~20 minutes
 - [Setup](#setup)
 - [Download segmentations](#download)
 - [Evaluate segmentations](#eval)
-- [Generate Segmentations from Saliency Heatmap](#segm)
+- [Generate segmentations from saliency method heatmaps](#heatmap_to_segm)
+- [Generate segmentations from human annotations](#ann_to_segm)
+- [Evaluation of localization performance](#eval)
 - [Citing](#citing)
 
 ---
@@ -27,10 +29,9 @@ TODO: ADD
 <a name="setup"></a>
 ## Setup
 
-The code should be run using Python 3.7.6. If using conda, run:
-
+The code should be run using Python 3.8.3 If using conda, run:
 ```
-> conda create -n chexlocalize python=3.7.6
+> conda create -n chexlocalize python=3.8.3
 > conda activate
 (chexlocalize) >
 ```
@@ -49,19 +50,34 @@ If you'd like to use the CheXlocalize dataset, download the validation set groun
 
 If you'd like to use your own predicted and ground-truth segmentations, they will need to be in the following format (TODO: ADD FORMAT INSTRUCTIONS).
 
-<a name="eval"></a>
-## Evaluate segmentations
+## Generate Segmentations from Saliency Heatmaps
+We provided the code to generate binary segmentations from saliency heatmaps (read about the thresholding scheme in the manuscript). To store the binary segmentations efficiently, we used RLE format and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
-We use two evaluation metrics to compare segmentations (TODO: add Fig. 1b):
-- **mIoU**: mean Intersection over Union is a stricter metric that measures how much, on average, the predicted segmentations overlap with the ground-truth segmentations.
-- **hit rate**: hit rate is a less strict metric that does not require the localization method to locate the full extent of a pathology. Hit rate is based on the pointing game setup, in which credit is given if the most representative point identified by the localization method lies within the ground-truth segmentation. A "hit" indicates that the correct region of the CXR was located regardless of the exact bounds of the binary segmentations. Localization performance is then calculated as the hit rate across the dataset.
+We also made public the Grad-CAM heatmaps that was run on the DenseNet121 Ensemble model for the validation set (Read our paper for model details). The Grad-CAM heatmaps are stored in the .pkl files under ./GradCAM_maps_val/. We also included a sample of the heatmaps in ./GradCAM_maps_val_sample for fast demo (we included three images). Each image id in the validation set has a pickel (.pkl) file associated with each of the ten pathologies. The .pkl files store model probability, saliency map and original image dimensions. 
 
-To evaluate localization performance using your own predicted and ground-truth segmentations
-
-To run evaluation using mIoU, use the following command:
+In the output segmentation json file, we format it such that all images and pathologies are indexed. If an image has no saliency segmentations, we stored a mask of all zeros.
 
 ```
-(chexlocalize) > python3 eval_miou.py
+python segmentation/heatmap_to_segmentation.py [OPTIONS]
+
+Options:
+--saliency_path 	Where saliency maps are stored (saliency heatmaps are extracted from the pickle files)
+--output_file_name  Name and path of the output json file that stores the encoded segmentation masks
+```
+
+<a name="ann_to_segm"></a>
+
+## Generate Segmentations from Annotations
+We also released the code to generate segmentation masks from annotations (a list of X-Y coordinates that contours the shape of the pathology.)
+
+The input annotation json file only includes images and pathologies that have a ground truth annotation. In the output segmentation json file, we index all images and all pathologies. If an image has no saliency segmentations, we store a segmentation mask of all zeros.
+
+```
+python segmentation/annotation_to_segmentation.py [OPTIONS]
+
+Options:
+--ann_path  Where the annotation json file is stored (represented as a list of coordiantes)
+--output_file_name  Name and path of the output json file that stores the encoded segmentation masks
 ```
 y is reported on the true positive slice of the
 174 dataset (CXRs that contain both saliency method and human benchmark segmentations
@@ -110,6 +126,20 @@ Options:
 --if_threshold 		Whether the thresholding scheme is adopted.
 --save_dir 		Path where the RLE-formatted segmentations are stored.
 ```
+
+<a name="eval"></a>
+## Evaluate segmentations
+
+We use two evaluation metrics to compare segmentations (TODO: add Fig. 1b):
+- **mIoU**: mean Intersection over Union is a stricter metric that measures how much, on average, the predicted segmentations overlap with the ground-truth segmentations.
+- **hit rate**: hit rate is a less strict metric that does not require the localization method to locate the full extent of a pathology. Hit rate is based on the pointing game setup, in which credit is given if the most representative point identified by the localization method lies within the ground-truth segmentation. A "hit" indicates that the correct region of the CXR was located regardless of the exact bounds of the binary segmentations. Localization performance is then calculated as the hit rate across the dataset.
+
+To evaluate localization performance using your own predicted and ground-truth segmentations
+
+To run evaluation using mIoU, use the following command:
+
+<a name="heatmap_to_segm"></a>
+
 
 
 <a name="citing"></a>
