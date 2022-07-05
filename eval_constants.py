@@ -1,5 +1,4 @@
 # constants for localization evaluation
-group_dir = '/deep/group/aihc-bootcamp-spring2020/localize'
 LOCALIZATION_TASKS =  ["Enlarged Cardiomediastinum",
                   "Cardiomegaly",
                   "Lung Lesion",
