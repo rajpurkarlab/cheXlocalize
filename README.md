@@ -45,90 +45,48 @@ Install all dependency packages using the following command:
 
 You may run the scripts in this repo using your own predicted and ground-truth segmentations, or you may run them on the CheXlocalize dataset.
 
-If you'd like to use the CheXlocalize dataset, download (1) the validation set Grad-CAM heat maps, (2) the validation set ground-truth raw radiologist annotations, (3) the validation set ground-truth pixel-level segmentations here: (TODO: ADD LINK).
+If you'd like to use the CheXlocalize dataset, download (1) the validation set Grad-CAM heat maps, (2) the validation set ground-truth raw radiologist annotations, (3) the validation set ground-truth pixel-level segmentations here: (TODO: ADD LINK).If you'd like to use your own predicted and ground-truth segmentations, they will need to be in the following format (TODO: ADD FORMAT INSTRUCTIONS).
 
-If you'd like to use your own predicted and ground-truth segmentations, they will need to be in the following format (TODO: ADD FORMAT INSTRUCTIONS).
+If you'd like to use your own heatmaps, annotations, and/or segmentations, see the relevant sections below for the expected data formatting.
 
-<a name="heatmap_to_segm">
+<a name="heatmap_to_segm"></a>
 ## Generate segmentations from saliency method heatmaps
 
-To generate binary segmentations from saliency method heat maps, 
+To generate binary segmentations from saliency method heat maps, run:
 
-We provided the code to generate binary segmentations from saliency heatmaps (read about the thresholding scheme in the manuscript). To store the binary segmentations efficiently, we used RLE format and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
+```
+(chexlocalize) > python heatmap_to_segmentation.py --map_dir <map_dir> --output_path <output_path>
+```
+
+`<map_dir>` is the directory with pickle files containing the heat maps. TODO: info on the format needed here.
+
+TODO: EXAMPLE OF JSON FILE FORMAT AND GRADCAN EXAMPKE
+saliency heatmaps are extracted from the pickle files)
 
 We also made public the Grad-CAM heatmaps that was run on the DenseNet121 Ensemble model for the validation set (Read our paper for model details). The Grad-CAM heatmaps are stored in the .pkl files under ./GradCAM_maps_val/. We also included a sample of the heatmaps in ./GradCAM_maps_val_sample for fast demo (we included three images). Each image id in the validation set has a pickel (.pkl) file associated with each of the ten pathologies. The .pkl files store model probability, saliency map and original image dimensions. 
 
-In the output segmentation json file, we format it such that all images and pathologies are indexed. If an image has no saliency segmentations, we stored a mask of all zeros.
+`<output_path>` is the json file path used for saving the encoded segmentation masks. To store the binary segmentations efficiently, we use RLE format, and the encoding is implemented using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools). The json file is formatted such that all images and pathologies are indexed.
 
-```
-python segmentation/heatmap_to_segmentation.py [OPTIONS]
+TODO: INCLUDE EXAMPLE OF JSON FILE FORMAT
 
-Options:
---saliency_path 	Where saliency maps are stored (saliency heatmaps are extracted from the pickle files)
---output_file_name  Name and path of the output json file that stores the encoded segmentation masks
-```
+If an image has no saliency segmentations, we stored a mask of all zeros.
 
 <a name="ann_to_segm"></a>
+## Generate segmentations from human annotations
 
-## Generate Segmentations from Annotations
+To generate binary segmentations from raw human annotations, run:
+
+```
+(chexlocalize) > python annotation_to_segmentation.py --ann_path <ann_path> --output_path <output_path>
+```
+
+`<ann_path>` is the json file path with raw human annotations. TODO INFO ON FORMATTING FOR CHEXLOCALIZE AND OTHERWISE.
+
+represented as a list of coordiantes)
+
 We also released the code to generate segmentation masks from annotations (a list of X-Y coordinates that contours the shape of the pathology.)
 
 The input annotation json file only includes images and pathologies that have a ground truth annotation. In the output segmentation json file, we index all images and all pathologies. If an image has no saliency segmentations, we store a segmentation mask of all zeros.
-
-```
-python segmentation/annotation_to_segmentation.py [OPTIONS]
-
-Options:
---ann_path  Where the annotation json file is stored (represented as a list of coordiantes)
---output_file_name  Name and path of the output json file that stores the encoded segmentation masks
-```
-y is reported on the true positive slice of the
-174 dataset (CXRs that contain both saliency method and human benchmark segmentations
-175 when the ground-truth label of the pathology is positive).
-
-To run evaluation using hit rate, use the following command:
-
-
-To evaluate localization performance using your own predicted and ground-truth segmentations, must be in certain format? TODO: ask what encoded json is?
-Mention that they should be encode, the masks should be encoded binary masks using RLE using pycocotools https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocotools/mask.py
-
-
-Our evaluation script generates the two summary metrics (mIoU and hit rate) for each localization task, as well as the corresponding 95% bootstrap confidence interval (n_boostrap_sample = 1000). 
-
-### Usage
-
-```
-Usage: python eval_miou.py [OPTIONS]
-
-Options:
-    --phase      	Use validation or test data.
-    --save_dir 		Path to which the summary csv is stored.
-```
-
-```
-Usage: python eval_ptgame.py [OPTIONS]
-
-Options:
-    --phase      	Use validation or test data.
-    --save_dir 		Path to which the summary csv is stored.
-```
-
-<a name="segm"></a>
-
-## Generate binary segmentations from saliency method heatmaps
-As a reference, we provide the code used generate binary segmentations from saliency method heat maps using a thresholding scheme. The technical details can be found in the Method section of our paper manuscript. To save the binary segmentations efficiently, we used RLE format for storage and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
-
-
-```
-python segmentation/pred_segmentation.py [OPTIONS]
-
-Options:
---phase			Use validation or test data
---method   		The saliency methods used
---model     		Single or ensemble
---if_threshold 		Whether the thresholding scheme is adopted.
---save_dir 		Path where the RLE-formatted segmentations are stored.
-```
 
 <a name="eval"></a>
 ## Evaluate segmentations
@@ -141,9 +99,18 @@ To evaluate localization performance using your own predicted and ground-truth s
 
 To run evaluation using mIoU, use the following command:
 
-<a name="heatmap_to_segm"></a>
+y is reported on the true positive slice of the
+174 dataset (CXRs that contain both saliency method and human benchmark segmentations
+175 when the ground-truth label of the pathology is positive).
+
+To run evaluation using hit rate, use the following command:
 
 
+To evaluate localization performance using your own predicted and ground-truth segmentations, must be in certain format? TODO: ask what encoded json is?
+Mention that they should be encode, the masks should be encoded binary masks using RLE using pycocotools https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocotools/mask.py
+
+
+Our evaluation script generates the two summary metrics (mIoU and hit rate) for each localization task, as well as the corresponding 95% bootstrap confidence interval (n_boostrap_sample = 1000). 
 
 <a name="citing"></a>
 

@@ -1,23 +1,21 @@
-"""" Create segmentation masks from annotations and encode segmentations in RLE formats using the pycocotools Mask API. The final output is stored in a json file. 
-    Input: --ann_path Where the annotation json file is stored (represented as a list of coordiantes)
-            (DEFAULT) ../cheXlozalize_dataset/gt_annotations_val.json
-    Output: --output_file_name the json file name that stores the encoded segmentation mask
-            (DEFAULT) gt_segmentations_val.json
-    
-    Usage: python3 segmentation/annotation_to_segmentation.py --ann_path ../cheXlozalize_dataset/gt_annotations_val.json --segm_path gt_segmentations_val.json
 """
+Converts raw human annotations to binary segmentations and encodes
+segmentations using RLE formats using the pycocotools Mask API. The final
+output is stored in a json file.
+"""
+from argparse import ArgumentParser
+import json
+import numpy as np
 import os
+from PIL import Image, ImageDraw
+from pycocotools import mask
 import sys
-# add parent directory to path so we can import eval_constants directly
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from tqdm import tqdm
+
 from eval_constants import LOCALIZATION_TASKS
 from eval_helper import encode_segmentation
-from pycocotools import mask
-from PIL import Image, ImageDraw
-import numpy as np
-import argparse
-import json
-from tqdm import tqdm
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def create_mask(polygons, img_dims):
@@ -75,13 +73,14 @@ def ann_to_mask(input_path, output_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--ann_path', default='../cheXlozalize_dataset/gt_annotations_val.json',
-                        help="Path to the annotations")
-    parser.add_argument(
-        '--output_file_name', default=f'gt_segmentations_val.json', help="path to save segmentation masks")
+    parser = ArgumentParser()
+    parser.add_argument('--ann_path', type=str,
+                        help='json file path with raw human annotations')
+    parser.add_argument('--output_path', type-str,
+                        default='./human_segmentations.json',
+                        help='json file path for saving encoded segmentations')
     args = parser.parse_args()
 
     annotation_path = args.ann_path
     segmentation_path = args.output_file_name
-    ann_to_mask(annotation_path, segmentation_path)
+    ann_to_mask(args.ann_path, args.output_path)

@@ -1,24 +1,23 @@
-""" Converts saliency heatmaps to binary segmentations and encode segmentations RLE formats using the pycocotools Mask API. The final output is stored in a json file. 
-    Input: --saliency_path where saliency maps are stored (saliency heatmaps are extracted from the pickle files)
-            DEFAULT: ../cheXlozalize_dataset/GradCAM_maps_val_sample/
-    Output: --output_file_name the json file that stores the encoded segmentation masks
-            DEFAULT: saliency_segmentations_val.json
-
-    Usage: python3 heatmap_to_segmentation.py --saliency_path ../cheXlozalize_dataset/GradCAM_maps_val_sample/ --output_file_name saliency_segmentations_val.json
 """
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from tqdm import tqdm
-import json
-import pickle
-import numpy as np
-from pathlib import Path
-import cv2
-import torch.nn.functional as F
+Converts saliency heat maps to binary segmentations and encodes segmentations
+using RLE formats using the pycocotools Mask API. The final output is stored in
+a json file.
+"""
 from argparse import ArgumentParser
+import cv2
+import json
+import numpy as np
+import os
+from pathlib import Path
+import pickle
+import sys
+import torch.nn.functional as F
+from tqdm import tqdm
+
 from eval_helper import encode_segmentation
 from eval_constants import *
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def cam_to_segmentation(cam_mask):
@@ -118,15 +117,12 @@ def heatmap_to_mask(map_dir, output_file_name):
 
 
 if __name__ == '__main__':
-
     parser = ArgumentParser()
-
-    parser.add_argument('--saliency_path', type=str, default='../cheXlozalize_dataset/GradCAM_maps_val_sample/',
-                        help='where saliency maps are stored')
-    parser.add_argument('--output_file_name', default='saliency_segmentations_val.json',
-                        help='where to save segmentations')
-
+    parser.add_argument('--map_dir', type=str,
+                        help='directory with pickle files containing heat maps')
+    parser.add_argument('--output_path', type=str,
+                        default='./saliency_segmentations.json',
+                        help='json file path for saving encoded segmentations')
     args = parser.parse_args()
-    map_dir = args.saliency_path
-    output = args.output_file_name
-    heatmap_to_mask(map_dir, output)
+
+    heatmap_to_mask(args.map_dir, args.output_path)
