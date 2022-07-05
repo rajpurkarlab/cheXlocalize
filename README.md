@@ -81,7 +81,7 @@ If you downloaded the CheXlocalize dataset, then these pickle files are in `/che
 # one of the ten possible pathologies (string)
 'task': Consolidation,
 
-# 0 if ground-truth label for 'task' is negative, 1 if positive
+# 0 if ground-truth label for 'task' is negative, 1 if positive (int)
 'gt': 0,
 
 # original cxr image
@@ -157,6 +157,7 @@ If you downloaded the CheXlocalize dataset, then this is the json file `/chexloc
 Each pathology key (e.g. `json_dict['patient64622_study1_view1_frontal']['Support Devices']`) is associated with a nested list of contours and coordinates: `[[coordinates for contour 1], [coordinates for contour 2]]`. The number of contours corresponds to the number of segmentations on a CXR for a given pathology. For example, the below CXR has two segmentations (and therefore would have two contours) for Atelectasis.
 
 ![example CXR with two segmentations](/img/example_two_segmentations.png =250x)
+<img src="example_two_segmentations.png" alt="drawing" width="200"/>
 
 Each contour holds a list of [X,Y] coordinates that contour the shape of the pathology.
 
