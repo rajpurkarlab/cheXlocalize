@@ -1,9 +1,9 @@
 """ Converts saliency heatmaps to binary segmentations and encode segmentations RLE formats using the pycocotools Mask API. The final output is stored in a json file. 
-    Input: where saliency maps are stored (saliency heatmaps are extracted from the pickle files)
+    Input: --saliency_path where saliency maps are stored (saliency heatmaps are extracted from the pickle files)
             DEFAULT: ../cheXlozalize_dataset/GradCAM_maps_val_sample/
-    Output: the json file that stores the encoded segmentation masks
+    Output: --output_file_name the json file that stores the encoded segmentation masks
             DEFAULT: saliency_segmentations_val.json
-            
+
     Usage: python3 heatmap_to_segmentation.py --saliency_path ../cheXlozalize_dataset/GradCAM_maps_val_sample/ --output_file_name saliency_segmentations_val.json
 """
 import os

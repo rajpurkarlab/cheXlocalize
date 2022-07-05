@@ -1,7 +1,7 @@
 """" Create segmentation masks from annotations and encode segmentations in RLE formats using the pycocotools Mask API. The final output is stored in a json file. 
-    Input: annotations of the pathologies (represented as a list of coordiantes) in json format 
+    Input: --ann_path Where the annotation json file is stored (represented as a list of coordiantes)
             (DEFAULT) ../cheXlozalize_dataset/gt_annotations_val.json
-    Output: encoded segmentation mask in json format
+    Output: --output_file_name the json file name that stores the encoded segmentation mask
             (DEFAULT) gt_segmentations_val.json
     
     Usage: python3 segmentation/annotation_to_segmentation.py --ann_path ../cheXlozalize_dataset/gt_annotations_val.json --segm_path gt_segmentations_val.json
@@ -79,9 +79,9 @@ if __name__ == "__main__":
     parser.add_argument('--ann_path', default='../cheXlozalize_dataset/gt_annotations_val.json',
                         help="Path to the annotations")
     parser.add_argument(
-        '--segm_path', default=f'gt_segmentations_val.json', help="path to save segmentation masks")
+        '--output_file_name', default=f'gt_segmentations_val.json', help="path to save segmentation masks")
     args = parser.parse_args()
 
     annotation_path = args.ann_path
-    segmentation_path = args.segm_path
+    segmentation_path = args.output_file_name
     ann_to_mask(annotation_path, segmentation_path)
