@@ -59,19 +59,19 @@ If you'd like to use your own heatmaps/annotations/segmentations, see the releva
 <a name="heatmap_to_segm"></a>
 ## Generate segmentations from saliency method heatmaps
 
-To generate binary segmentations from saliency method heat maps, run:
+To generate binary segmentations from saliency method heatmaps, run:
 
 ```
 (chexlocalize) > python heatmap_to_segmentation.py --map_dir <map_dir> --output_path <output_path>
 ```
 
-`<map_dir>` is the directory with pickle files containing the heat maps. The script extracts the heat maps from the pickle files.
+`<map_dir>` is the directory with pickle files containing the heatmaps. The script extracts the heatmaps from the pickle files.
 
 If you downloaded the CheXlocalize dataset, then these pickle files are in `/chexlocalize_dataset/gradcam_heatmaps_val/`. Each CXR has a pickle file associated with each of the ten pathologies, so that each pickle file contains information for a single CXR and pathology in the following format:
 
 ```
 {
-# DenseNet121 + Grad-CAM heat map <torch.Tensor> of shape (1, 1, h, w) #TODO: is this right?
+# DenseNet121 + Grad-CAM heatmap <torch.Tensor> of shape (1, 1, h, w) #TODO
 'map': tensor([[[[1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
            	 [1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
            	 ...,
@@ -116,7 +116,7 @@ If using your own saliency maps, please be sure to save them as pickle files usi
 
 To store the binary segmentations efficiently, we use RLE format, and the encoding is implemented using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools). If an image has no saliency segmentations, we store a mask of all zeros.
 
-Running this script on the validation set heat maps from the CheXlocalize dataset should take about 10 minutes.
+Running this script on the validation set heatmaps from the CheXlocalize dataset should take about 10 minutes.
 
 <a name="ann_to_segm"></a>
 ## Generate segmentations from human annotations
@@ -169,7 +169,7 @@ If using your own human annotations, please be sure to save them in a json using
 
 `<output_path>` is the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details).
 
-Running this script on the validation set heat maps from the CheXlocalize dataset should take about 5 minutes.
+Running this script on the validation set heatmaps from the CheXlocalize dataset should take about 5 minutes.
 
 <a name="eval"></a>
 ## Evaluate localization performance
@@ -189,15 +189,15 @@ To run evaluation, use the following command:
 (chexlocalize) > python eval.py [FLAGS]
 ```
 
-**Required flags**:
-`--metric`: options are 'miou' or 'hitrate'
-`--gt_path`: Directory where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/chexlocalize_dataset/gt_segmentations_val.json`.
-`--pred_path`: If `metric = miou`, then this should be the directory where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file TODO. If `metric = hitrate`, then this should be directory with pickle files containing heat maps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/chexlocalize_dataset/gradcam_heatmaps_val/`.
+**Required flags**
+* `--metric`: options are 'miou' or 'hitrate'
+* `--gt_path`: Directory where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/chexlocalize_dataset/gt_segmentations_val.json`.
+* `--pred_path`: If `metric = miou`, then this should be the directory where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file TODO. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/chexlocalize_dataset/gradcam_heatmaps_val/`.
 
-**Optional flags:**
-`--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations).
-`--save_dir`: Default is `./`. Where to save evaluation results.
-`--seed`: Default is `0`. Random seed to fix for bootstrapping.
+**Optional flags**
+* `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations).
+* `--save_dir`: Default is `./`. Where to save evaluation results.
+* `--seed`: Default is `0`. Random seed to fix for bootstrapping.
 
 Both `gt_path` and `pred_path` must be json files where each key is a single CXR id with its data formatted as follows:
 
