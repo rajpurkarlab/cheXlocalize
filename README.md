@@ -1,3 +1,5 @@
+# CheXlocalize
+
 This repository contains the code used to generate segmentations from saliency method heat maps and human annotations, and to evaluate the localization performance of those segmentations, as described in the paper _Benchmarking saliency methods for chest X-ray interpretation_. [TODO: add link]
 
 You may run the scripts in this repo using your own heat maps/annotations/segmentations, or you may run them on the CheXlocalize dataset. TODO: ADD LINK.
