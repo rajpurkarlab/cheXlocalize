@@ -190,27 +190,27 @@ To run evaluation, use the following command:
 ```
 
 **Required flags**
-* `--metric`: options are 'miou' or 'hitrate'
+* `--metric`: options are `miou` or `hitrate`
 * `--gt_path`: Directory where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/chexlocalize_dataset/gt_segmentations_val.json`.
 * `--pred_path`: If `metric = miou`, then this should be the directory where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file TODO. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/chexlocalize_dataset/gradcam_heatmaps_val/`.
 
 **Optional flags**
 * `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations).
-* `--save_dir`: Default is `./`. Where to save evaluation results.
+* `--save_dir`: Where to save evaluation results. Default is current directory.
 * `--seed`: Default is `0`. Random seed to fix for bootstrapping.
 
-Both `gt_path` and `pred_path` must be json files where each key is a single CXR id with its data formatted as follows:
+Both `pred_path` (if `metric = miou`) and `gt_path` must be json files where each key is a single CXR id with its data formatted as follows:
 
 ```
 {
     'patient64622_study1_view1_frontal': {
 	    'Enlarged Cardiomediastinum': {
 		'size': [2320, 2828], # (h, w)
-		'counts': '`Vej1Y2iU2c0B?F9G7I6J5K6J6J6J6J6H8G9G9J6L4L4L4L4L3M3M3M3L4L4L4L4K6K4L4L4L4L4M3M3L4M3M3M3L4M3M3L4M3M3M3M3M3M2N3M3M3M3M3M3M3M3M3M3L4M3L3N3M2M4M3L3N3M2N3N1N3N2M2O2M3N1O2M3N1N3N2M3N1N3N2N2N1O2N2N1O2N2N2N1O2N2N2N1N3N2N1O2M3N1O2N1O2M3N1O2N1N3N1O2N2M2O2N1O2N1O2N2N1O2N1O2N1O2N1O2N1O2N1O1O2N1O2N1O2N1O2N1O2N1O2O0O2N1O2N1O1O2N1O2N1O2N101N1O2N1O2N1XNi_OV[NY`0ad1Q@\\[NP`0\\d1[@`[Ng?Vd1d@h[N\\?Rd1m@j[NU?Rd1QAj[NP'},
+		'counts': '`Vej1Y2iU2c0B?F9G7I6J5K6J6J6J6J6H8G9G9J6L4L4L4L4L3M3M3M3L4L4...'},
 	    ....
 	    'Support Devices': {
 		'size': [2320, 2828], # (h, w)
-		'counts': 'Xid[1R1ZW29G8H9G9H9F:G9G9G7I7H8I7I6K4L5K4L5K4L4L5K4L5J5L5K4L4L4L4L4L4L3M4M3L4M3M3L3N3M3L4M3M2M4M3M3L4M3M2N3L4M3M3L3N3M3L4M3M3L3N2N2M3N2'}
+		'counts': 'Xid[1R1ZW29G8H9G9H9F:G9G9G7I7H8I7I6K4L5K4L5K4L4L5K4L5J5L5K...'}
     },
     ...
     'patient64652_study1_view1_frontal': {
