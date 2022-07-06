@@ -73,7 +73,7 @@ If you downloaded the CheXlocalize dataset, then these pickle files are in `/che
 
 ```
 {
-# DenseNet121 + Grad-CAM heatmap <torch.Tensor> of shape (1, 1, h, w) #TODO
+# DenseNet121 + Grad-CAM heatmap <torch.Tensor> of shape (1, 1, h, w)
 'map': tensor([[[[1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
            	 [1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
            	 ...,
