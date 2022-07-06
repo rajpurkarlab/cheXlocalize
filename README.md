@@ -1,8 +1,3 @@
-![LOGO](/img/CheXplanation.svg)
-
-TODO: UPDATE ABOVE LOGO
-TODO: UPDATE THIS SECTION BELOW
-
 This repository contains the code used to generate segmentations from saliency method heat maps and human annotations, and to evaluate the localization performance of those segmentations, as described in the paper _Benchmarking saliency methods for chest X-ray interpretation_. [TODO: add link]
 
 You may run the scripts in this repo using your own heat maps/annotations/segmentations, or you may run them on the CheXlocalize dataset. TODO: ADD LINK.
@@ -101,7 +96,7 @@ If you downloaded the CheXlocalize dataset, then these pickle files are in `/che
           	    [0.7804, 0.8157, 0.8157,  ..., 0.3216, 0.2824, 0.2510],
           	    [0.8353, 0.8431, 0.8549,  ..., 0.3725, 0.3412, 0.3137]]]),
 
-# dimensions of original cxr (h, w)
+# dimensions of original cxr (w, h)
 'cxr_dims': (2022, 1751)
 }
 ```
@@ -131,7 +126,7 @@ If you downloaded the CheXlocalize dataset, then this is the json file `/chexloc
 ```
 {
     'patient64622_study1_view1_frontal': {
-        'img_size': [2320, 2828], # dimensions of original CXR (h, w)
+        'img_size': [2320, 2828], # (h, w)
 	'Support Devices': [[[1310.68749, 194.47059],
    		    	     [1300.45214, 194.47059],
    			     [1290.21691, 201.29412],
@@ -180,25 +175,49 @@ We use two evaluation metrics to compare segmentations:
 
 For more details on mIoU and hit rate, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
 
-To evaluate localization performance using your own predicted and ground-truth segmentations
+To run evaluation, use the following command:
 
-To run evaluation using mIoU, use the following command:
+```
+(chexlocalize) > python eval.py [FLAGS]
+```
 
-y is reported on the true positive slice of the
-174 dataset (CXRs that contain both saliency method and human benchmark segmentations
-175 when the ground-truth label of the pathology is positive).
+**Required flags**:
+`--metric`: options are 'miou' or 'hitrate'
+`--gt_path`: Directory where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/chexlocalize_dataset/gt_segmentations_val.json`.
+`--pred_path`: If `metric = miou`, then this should be the directory where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file TODO. If `metric = hitrate`, then this should be directory with pickle files containing heat maps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/chexlocalize_dataset/gradcam_heatmaps_val/`.
 
-In the output segmentation json file, we index all images and all pathologies. If an image has no saliency segmentations, we store a segmentation mask of all zeros.
+**Optional flags:**
+`--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations).
+`--save_dir`: Default is `./`. Where to save evaluation results.
+`--seed`: Default is `0`. Random seed to fix for bootstrapping.
 
-The json file is formatted such that all images and pathologies are indexed.
-To run evaluation using hit rate, use the following command:
+Both `gt_path` and `pred_path` must be json files where each key is a single CXR id with its data formatted as follows:
 
+```
+{
+    'patient64622_study1_view1_frontal': {
+	    'Enlarged Cardiomediastinum': {
+		'size': [2320, 2828], # (h, w)
+		'counts': '`Vej1Y2iU2c0B?F9G7I6J5K6J6J6J6J6H8G9G9J6L4L4L4L4L3M3M3M3L4L4L4L4K6K4L4L4L4L4M3M3L4M3M3M3L4M3M3L4M3M3M3M3M3M2N3M3M3M3M3M3M3M3M3M3L4M3L3N3M2M4M3L3N3M2N3N1N3N2M2O2M3N1O2M3N1N3N2M3N1N3N2N2N1O2N2N1O2N2N2N1O2N2N2N1N3N2N1O2M3N1O2N1O2M3N1O2N1N3N1O2N2M2O2N1O2N1O2N2N1O2N1O2N1O2N1O2N1O2N1O1O2N1O2N1O2N1O2N1O2N1O2O0O2N1O2N1O1O2N1O2N1O2N101N1O2N1O2N1XNi_OV[NY`0ad1Q@\\[NP`0\\d1[@`[Ng?Vd1d@h[N\\?Rd1m@j[NU?Rd1QAj[NP'},
+	    ....
+	    'Support Devices': {
+		'size': [2320, 2828], # (h, w)
+		'counts': 'Xid[1R1ZW29G8H9G9H9F:G9G9G7I7H8I7I6K4L5K4L5K4L4L5K4L5J5L5K4L4L4L4L4L4L3M4M3L4M3M3L3N3M3L4M3M2M4M3M3L4M3M2N3L4M3M3L3N3M3L4M3M3L3N2N2M3N2'}
+    },
+    ...
+    'patient64652_study1_view1_frontal': {
+	...
+    }
+}
+```
 
-To evaluate localization performance using your own predicted and ground-truth segmentations, must be in certain format? TODO: ask what encoded json is?
-Mention that they should be encode, the masks should be encoded binary masks using RLE using pycocotools https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocotools/mask.py
+Both `pred_path` (if `metric = miou`) and `gt_path` json files must contain a key for all CXR ids (regardless of whether it has any positive ground-truth labels), and each CXR id key must have values for all ten pathologies (regardless of ground-truth label). In other words, all CXRs and images are indexed. If a CXR has no segmentations, we store a segmentation mask of all zeros. If using your own `pred_path` and `gt_path` json files as input to this script, be sure that they are formatted per the above, with segmentation masks encoded using RLE using [pycocotools](https://github.com/
+cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
-
-Our evaluation script generates the two summary metrics (mIoU and hit rate) for each localization task, as well as the corresponding 95% bootstrap confidence interval (n_boostrap_sample = 1000). 
+This evaluation script generates three csv files:
+`{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and each pathology.
+`{miou/hitrate}_bootstrap_results.csv`: 1000 bootstrap samples of mIoU or hit rate for each pathology.
+`{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
 
 <a name="citation"></a>
 ## Citation

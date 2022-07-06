@@ -1,16 +1,12 @@
-"""
-Given predicted and ground-truth segmentations, compute mIoU and confidence
-intervals for each of the 10 pathologies.
-
-Usage: python3 eval_miou.py --phase val --save_dir /path/to/save/results
-"""
 from argparse import ArgumentParser
 import json
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import pickle
 from PIL import Image
 from pycocotools import mask
+import torch.nn.functional as F
 from tqdm import tqdm
 
 from eval_constants import LOCALIZATION_TASKS
@@ -149,11 +145,9 @@ def create_map(pkl_path):
 
 def get_hit_rates(gt_path, pred_path):
     """
-    TODO: make this comment clearer
-    TODO: also, it looks like this function expects a different path? like a
-    path with a bunch of pkl files. is that right? where do these pkl files come from?
-    Calculate hit rate·
-    - We need to figure 
+	Args:
+        gt_path (str): directory where ground-truth segmentations are saved (encoded)
+        pred_path (str): directory with pickle file containing heat maps
     """
     with open(gt_path) as f:
         gt_dict = json.load(f)
@@ -178,7 +172,7 @@ def get_hit_rates(gt_path, pred_path):
                 results[img_id][task] = 0
         else:
             # get ground truth binary mask
-            if img_id not in gt:
+            if img_id not in gt_dict:
                 continue
             else:
                 results[img_id] = {}
@@ -190,46 +184,44 @@ def get_hit_rates(gt_path, pred_path):
         # get saliency heatmap
         sal_map, img_dims = create_map(pkl_path)
 
-        x =  np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[0]
-        y = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape) [1]
+        x = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[0]
+        y = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[1]
 
         assert (gt_mask.shape == sal_map.shape)
-        if(gt_mask[x][y]==1):
+        if (gt_mask[x][y]==1):
             results[img_id][task] = 1
         elif (np.sum(gt_mask)==0):
             results[img_id][task] = np.nan
 
     all_ids = sorted(gt_dict.keys())
+
     return results, all_ids
 
 
 def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     """
-    Evaluate localization performance using mIoU or hit rate. Return miou by pathologies
-    and their confidence intervals
-    #TODO: format of return
+	Generates and saves three csv files:
+	-- `{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and each pathology.
+	-- `{miou/hitrate}_bootstrap_results.csv`: 1000 bootstrap samples of mIoU or hit rate for each pathology.
+	-- `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
     """
     # create save_dir if it does not already exist
     Path(save_dir).mkdir(exist_ok=True,parents=True)
 
-    # TODO: factor this out?
     if metric == 'miou':
         ious, cxr_ids = get_ious(gt_path, pred_path, true_pos_only)
         metric_df = pd.DataFrame.from_dict(ious)
-        metric_df['img_id'] = cxr_ids
-        metric_df.to_csv(f'{save_dir}/iou_results.csv',index = False)
-
-        bs_df = bootstrap_metric(metric_df, 1000)
-        bs_df.to_csv(f'{save_dir}/bootstrap_iou_results.csv',index = False)
     elif metric == 'hitrate':
-        results, cxr_ids = get_hit_rates(gt_path, pred_path)
-        metrics = pd.DataFrame.from_dict(results,orient='index')
-        bs_df= bootstrap_metric(metrics, 1000)
-        bs_df.to_csv(f'{save_dir}/{table_name}_bs_hit.csv',index = False)
-        metrics['img_id'] = all_ids
-        metrics.to_csv(f'{save_dir}/{table_name}_hit.csv',index = False)
+        hit_rates, cxr_ids = get_hit_rates(gt_path, pred_path)
+        metric_df = pd.DataFrame.from_dict(hit_rates, orient='index')
     else:
         raise ValueError('`metric` must be either `miou` or `hitrate`')
+
+    metric_df['img_id'] = cxr_ids
+    metric_df.to_csv(f'{save_dir}/{metric}_results.csv', index=False)
+
+    bs_df = bootstrap_metric(metric_df, 1000)
+    bs_df.to_csv(f'{save_dir}/{metric}_bootstrap_results.csv', index=False)
 
     # get confidence intervals
     records = []
@@ -238,19 +230,20 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
 
     summary_df = pd.DataFrame.from_records(records)
     print(summary_df)
-    summary_df.to_csv(f'{save_dir}/summary_iou_results.csv',index = False)
+    summary_df.to_csv(f'{save_dir}/{metric}_summary_results.csv', index=False)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+    parser.add_argument('--metric', type=str,
+                        help='options are: miou or hitrate')
     parser.add_argument('--gt_path', type=str,
                         help='directory where ground-truth segmentations are \
                               saved (encoded)')
     parser.add_argument('--pred_path', type=str,
-                        help='directory where predicted segmentations are saved \
-                              saved (encoded)')
-    parser.add_argument('--metric', type=str,
-                        help='options are: miou or hitrate')
+                        help='json path where predicted segmentations are saved \
+                              (if metric = miou) or directory with pickle files \
+							  containing heat maps (if metric = hitrate)')
     parser.add_argument('--true_pos_only', default="True",
                         help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
