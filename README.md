@@ -51,9 +51,9 @@ Download the CheXlocalize dataset here [TODO: add link]. You'll find:
 * `CheXpert-v1.0/valid/`: validation set CXR images
 * `CheXpert-v1.0/valid.csv`: validation set ground-truth labels
 * `gradcam_maps_val/`: validation set DenseNet121 + Grad-CAM heatmaps
+* `gradcam_segmentations_val.json`: validation set DenseNet121 + Grad-CAM pixel-level segmentations
 * `gt_annotations_val.json`: validation set ground-truth raw radiologist annotations
 * `gt_segmentations_val.json`: validation set ground-truth pixel-level segmentations
-* `gradcam_segmentations_val.json`: validation set DenseNet121 + Grad-CAM pixel-level segmentations
 
 We have also included a small sample of the above data in this repo in [`./sample`](https://github.com/rajpurkarlab/cheXlocalize/tree/master/sample).
 
