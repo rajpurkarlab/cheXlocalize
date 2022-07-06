@@ -54,6 +54,8 @@ Download the CheXlocalize dataset here [TODO: add link]. You'll find:
 * `gt_annotations_val.json`: validation set ground-truth raw radiologist annotations
 * `gt_segmentations_val.json`: validation set ground-truth pixel-level segmentations
 
+We have also included a small sample of the above data in this repo in [`./sample`](https://github.com/rajpurkarlab/cheXlocalize/tree/master/sample).
+
 If you'd like to use your own heatmaps/annotations/segmentations, see the relevant sections below for the expected data formatting.
 
 <a name="heatmap_to_segm"></a>
