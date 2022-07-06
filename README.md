@@ -50,9 +50,10 @@ Download the CheXlocalize dataset here [TODO: add link]. You'll find:
 
 * `CheXpert-v1.0/valid/`: validation set CXR images
 * `CheXpert-v1.0/valid.csv`: validation set ground-truth labels
-* `gradcam_heatmaps_val/`: validation set DenseNet121 + Grad-CAM heatmaps
+* `gradcam_maps_val/`: validation set DenseNet121 + Grad-CAM heatmaps
 * `gt_annotations_val.json`: validation set ground-truth raw radiologist annotations
 * `gt_segmentations_val.json`: validation set ground-truth pixel-level segmentations
+* `gradcam_segmentations_val.json`: validation set DenseNet121 + Grad-CAM pixel-level segmentations
 
 We have also included a small sample of the above data in this repo in [`./sample`](https://github.com/rajpurkarlab/cheXlocalize/tree/master/sample).
 
@@ -69,7 +70,7 @@ To generate binary segmentations from saliency method heatmaps, run:
 
 `<map_dir>` is the directory with pickle files containing the heatmaps. The script extracts the heatmaps from the pickle files.
 
-If you downloaded the CheXlocalize dataset, then these pickle files are in `/chexlocalize_dataset/gradcam_heatmaps_val/`. Each CXR has a pickle file associated with each of the ten pathologies, so that each pickle file contains information for a single CXR and pathology in the following format:
+If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`. Each CXR has a pickle file associated with each of the ten pathologies, so that each pickle file contains information for a single CXR and pathology in the following format:
 
 ```
 {
@@ -131,7 +132,7 @@ To generate binary segmentations from raw human annotations, run:
 
 `<ann_path>` is the json file path with raw human annotations.
 
-If you downloaded the CheXlocalize dataset, then this is the json file `/chexlocalize_dataset/gt_annotations_val.json`. Each key of the json file is a single CXR id with its data formatted as follows:
+If you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_annotations_val.json`. Each key of the json file is a single CXR id with its data formatted as follows:
 
 ```
 {
@@ -193,8 +194,8 @@ To run evaluation, use the following command:
 
 **Required flags**
 * `--metric`: options are `miou` or `hitrate`
-* `--gt_path`: Directory where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/chexlocalize_dataset/gt_segmentations_val.json`.
-* `--pred_path`: If `metric = miou`, then this should be the directory where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file TODO. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/chexlocalize_dataset/gradcam_heatmaps_val/`.
+* `--gt_path`: Directory where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_segmentations_val.json`.
+* `--pred_path`: If `metric = miou`, then this should be the directory where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`.
 
 **Optional flags**
 * `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations).
