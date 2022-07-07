@@ -2,7 +2,7 @@
 
 This repository contains the code used to generate segmentations from saliency method heatmaps and human annotations, and to evaluate the localization performance of those segmentations, as described in the paper [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3.full.pdf).
 
-You may run the scripts in this repo using your own heatmaps/annotations/segmentations, or you may run them on the CheXlocalize dataset [TODO: add link].
+You may run the scripts in this repo using your own heatmaps/annotations/segmentations, or you may run them on the [CheXlocalize dataset](https://stanfordaimi.azurewebsites.net/datasets/abfb76e5-70d5-4315-badc-c94dd82e3d6d).
 
 ### Table of Contents
 - [Overview](#overview)
@@ -18,7 +18,7 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 
 While deep learning has enabled automated medical imaging interpretation at a level shown to surpass that of practicing experts, the "black box" nature of neural networks represents a major barrier to clinical trust and adoption. Therefore, to encourage the development and validation of more "interpretable" models for chest X-ray interpretation, we present a new radiologist-annotated segmentation dataset.
 
-CheXlocalize [TODO: add link] is a radiologist-annotated segmentation dataset on chest X-rays. The dataset consists of two types of radiologist annotations for the localization of 10 pathologies: pixel-level segmentations and most-representative points. Annotations were drawn on images from the [CheXpert](https://stanfordmlgroup.github.io/competitions/chexpert/) validation and test sets. The dataset also consists of two separate sets of radiologist annotations: (1) ground-truth pixel-level segmentations on the validation and test sets, drawn by two board-certified radiologists, and (2) benchmark pixel-level segmentations and most-representative points on the test set, drawn by a separate group of three board-certified radiologists.
+[CheXlocalize](https://stanfordaimi.azurewebsites.net/datasets/abfb76e5-70d5-4315-badc-c94dd82e3d6d) is a radiologist-annotated segmentation dataset on chest X-rays. The dataset consists of two types of radiologist annotations for the localization of 10 pathologies: pixel-level segmentations and most-representative points. Annotations were drawn on images from the [CheXpert](https://stanfordmlgroup.github.io/competitions/chexpert/) validation and test sets. The dataset also consists of two separate sets of radiologist annotations: (1) ground-truth pixel-level segmentations on the validation and test sets, drawn by two board-certified radiologists, and (2) benchmark pixel-level segmentations and most-representative points on the test set, drawn by a separate group of three board-certified radiologists.
 
 ![overview](/img/overview.png)
 
@@ -46,7 +46,7 @@ Install all dependency packages using the following command:
 
 You may run the scripts in this repo using your own heatmaps/annotations/segmentations, or you may run them on the CheXlocalize dataset.
 
-Download the CheXlocalize dataset here [TODO: add link]. You'll find:
+Download the CheXlocalize dataset [here](https://stanfordaimi.azurewebsites.net/datasets/abfb76e5-70d5-4315-badc-c94dd82e3d6d). You'll find:
 
 * `CheXpert-v1.0/valid/`: validation set CXR images
 * `CheXpert-v1.0/valid.csv`: validation set ground-truth labels
