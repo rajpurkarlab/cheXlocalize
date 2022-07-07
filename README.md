@@ -1,100 +1,238 @@
-![LOGO](/img/CheXplanation.svg)
+# CheXlocalize
 
-This the code repo referenced in the paper, "Benchmarking saliency methods for chest X-ray interpretation ". We provided the source code used for evaluation of saliency map localization. To download the validation dataset or view and submit to the leaderboard, visit the [CheXplanation website](https://stanfordmlgroup.github.io/competitions/chexplanation/).
+This repository contains the code used to generate segmentations from saliency method heatmaps and human annotations, and to evaluate the localization performance of those segmentations, as described in the paper [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3.full.pdf).
 
-Typical install time: ~5 minutes
-Expected run time for demo: ~20 minutes
+You may run the scripts in this repo using your own heatmaps/annotations/segmentations, or you may run them on the [CheXlocalize dataset](https://stanfordaimi.azurewebsites.net/datasets/abfb76e5-70d5-4315-badc-c94dd82e3d6d).
 
 ### Table of Contents
+- [Overview](#overview)
+- [Setup](#setup)
+- [Download data](#download)
+- [Generate segmentations from saliency method heatmaps](#heatmap_to_segm)
+- [Generate segmentations from human annotations](#ann_to_segm)
+- [Evaluate localization performance](#eval)
+- [Citation](#citation)
 
-- [Prerequisites](#prereqs)
-- [Generate Segmentations from Saliency Heatmaps](#heatmap_to_segm)
-- [Generate Segmentations from Annotations](#ann_to_segm)
-- [Evaluation of Localization](#eval)
-- [License](#license)
-- [Citing](#citing)
+<a name="overview"></a>
+## Overview
 
----
+While deep learning has enabled automated medical imaging interpretation at a level shown to surpass that of practicing experts, the "black box" nature of neural networks represents a major barrier to clinical trust and adoption. Therefore, to encourage the development and validation of more "interpretable" models for chest X-ray interpretation, we present a new radiologist-annotated segmentation dataset.
 
-<a name="prereqs"></a>
+[CheXlocalize](https://stanfordaimi.azurewebsites.net/datasets/abfb76e5-70d5-4315-badc-c94dd82e3d6d) is a radiologist-annotated segmentation dataset on chest X-rays. The dataset consists of two types of radiologist annotations for the localization of 10 pathologies: pixel-level segmentations and most-representative points. Annotations were drawn on images from the [CheXpert](https://stanfordmlgroup.github.io/competitions/chexpert/) validation and test sets. The dataset also consists of two separate sets of radiologist annotations: (1) ground-truth pixel-level segmentations on the validation and test sets, drawn by two board-certified radiologists, and (2) benchmark pixel-level segmentations and most-representative points on the test set, drawn by a separate group of three board-certified radiologists.
 
-## Prerequisites
+![overview](/img/overview.png)
 
-The code should be run using Python 3.8.3.
+The validation and test sets consist of 234 chest X-rays from 200 patients and 668 chest X-rays from 500 patients, respectively. The 10 pathologies of interest are Atelectasis, Cardiomegaly, Consolidation, Edema, Enlarged Cardiomediastinum, Lung Lesion, Lung Opacity, Pleural Effusion, Pneumothorax, and Support Devices.
 
-Before starting, please install the repo Python requirements using the following command:
+For more details, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
+
+<a name="setup"></a>
+## Setup
+
+The code should be run using Python 3.8.3. If using conda, run:
 ```
-pip install -r requirements.txt
+> conda create -n chexlocalize python=3.8.3
+> conda activate chexlocalize
+(chexlocalize) >
 ```
+
+Install all dependency packages using the following command:
+```
+(chexlocalize) > pip install -r requirements.txt
+```
+
+<a name="download"></a>
+## Download data
+
+You may run the scripts in this repo using your own heatmaps/annotations/segmentations, or you may run them on the CheXlocalize dataset.
+
+Download the CheXlocalize dataset [here](https://stanfordaimi.azurewebsites.net/datasets/abfb76e5-70d5-4315-badc-c94dd82e3d6d). You'll find:
+
+* `CheXpert-v1.0/valid/`: validation set CXR images
+* `CheXpert-v1.0/valid.csv`: validation set ground-truth labels
+* `gradcam_maps_val/`: validation set DenseNet121 + Grad-CAM heatmaps
+* `gradcam_segmentations_val.json`: validation set DenseNet121 + Grad-CAM pixel-level segmentations
+* `gt_annotations_val.json`: validation set ground-truth raw radiologist annotations
+* `gt_segmentations_val.json`: validation set ground-truth pixel-level segmentations
+
+We have also included a small sample of the above data in this repo in [`./sample`](https://github.com/rajpurkarlab/cheXlocalize/tree/master/sample).
+
+If you'd like to use your own heatmaps/annotations/segmentations, see the relevant sections below for the expected data formatting.
 
 <a name="heatmap_to_segm"></a>
+## Generate segmentations from saliency method heatmaps
 
-## Generate Segmentations from Saliency Heatmaps
-We provided the code to generate binary segmentations from saliency heatmaps (read about the thresholding scheme in the manuscript). To store the binary segmentations efficiently, we used RLE format and the encoding is implemented using the toolbox provided in COCO detection challenge, [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
-
-We also made public the Grad-CAM heatmaps that was run on the DenseNet121 Ensemble model for the validation set (Read our paper for model details). The Grad-CAM heatmaps are stored in the .pkl files under ./GradCAM_maps_val/. We also included a sample of the heatmaps in ./GradCAM_maps_val_sample for fast demo (we included three images). Each image id in the validation set has a pickel (.pkl) file associated with each of the ten pathologies. The .pkl files store model probability, saliency map and original image dimensions. 
-
-In the output segmentation json file, we format it such that all images and pathologies are indexed. If an image has no saliency segmentations, we stored a mask of all zeros.
+To generate binary segmentations from saliency method heatmaps, run:
 
 ```
-python segmentation/heatmap_to_segmentation.py [OPTIONS]
-
-Options:
---saliency_path 	Where saliency maps are stored (saliency heatmaps are extracted from the pickle files)
---output_file_name  Name and path of the output json file that stores the encoded segmentation masks
+(chexlocalize) > python heatmap_to_segmentation.py --map_dir <map_dir> --output_path <output_path>
 ```
+
+`<map_dir>` is the directory with pickle files containing the heatmaps. The script extracts the heatmaps from the pickle files.
+
+If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`. Each CXR has a pickle file associated with each of the ten pathologies, so that each pickle file contains information for a single CXR and pathology in the following format:
+
+```
+{
+# DenseNet121 + Grad-CAM heatmap <torch.Tensor> of shape (1, 1, h, w)
+'map': tensor([[[[1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
+           	 [1.4711e-06, 1.4711e-06, 1.4711e-06,  ..., 5.7636e-06, 5.7636e-06, 5.7636e-06],
+           	 ...,
+    		 [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 7.9709e-05, 7.9709e-05, 7.9709e-05],
+           	 [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 7.9709e-05, 7.9709e-05, 7.9709e-05]]]]),
+
+# model probability (float)
+'prob': 0.02029409697279334,
+
+# one of the ten possible pathologies (string)
+'task': Consolidation,
+
+# 0 if ground-truth label for 'task' is negative, 1 if positive (int)
+'gt': 0,
+
+# original cxr image
+'cxr_img': tensor([[[0.7490, 0.7412, 0.7490,  ..., 0.8196, 0.8196, 0.8118],
+  		    [0.6627, 0.6627, 0.6706,  ..., 0.7373, 0.7137, 0.6941],
+          	    [0.5137, 0.5176, 0.5294,  ..., 0.6000, 0.5686, 0.5255],
+          	    ...,
+          	    [0.7294, 0.7725, 0.7804,  ..., 0.2941, 0.2549, 0.2078],
+          	    [0.7804, 0.8157, 0.8157,  ..., 0.3216, 0.2824, 0.2510],
+          	    [0.8353, 0.8431, 0.8549,  ..., 0.3725, 0.3412, 0.3137]],
+          	    ...
+         	   [[0.7490, 0.7412, 0.7490,  ..., 0.8196, 0.8196, 0.8118],
+          	    [0.6627, 0.6627, 0.6706,  ..., 0.7373, 0.7137, 0.6941],
+          	    [0.5137, 0.5176, 0.5294,  ..., 0.6000, 0.5686, 0.5255],
+          	    ...,
+          	    [0.7294, 0.7725, 0.7804,  ..., 0.2941, 0.2549, 0.2078],
+          	    [0.7804, 0.8157, 0.8157,  ..., 0.3216, 0.2824, 0.2510],
+          	    [0.8353, 0.8431, 0.8549,  ..., 0.3725, 0.3412, 0.3137]]]),
+
+# dimensions of original cxr (w, h)
+'cxr_dims': (2022, 1751)
+}
+```
+
+If using your own saliency maps, please be sure to save them as pickle files using the above formatting.
+
+
+`<output_path>` is the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details).
+
+To store the binary segmentations efficiently, we use RLE format, and the encoding is implemented using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools). If an image has no saliency segmentations, we store a mask of all zeros.
+
+Running this script on the validation set heatmaps from the CheXlocalize dataset should take about 10 minutes.
 
 <a name="ann_to_segm"></a>
+## Generate segmentations from human annotations
 
-## Generate Segmentations from Annotations
-We also released the code to generate segmentation masks from annotations (a list of X-Y coordinates that contours the shape of the pathology.)
-
-The input annotation json file only includes images and pathologies that have a ground truth annotation. In the output segmentation json file, we index all images and all pathologies. If an image has no saliency segmentations, we store a segmentation mask of all zeros.
+To generate binary segmentations from raw human annotations, run:
 
 ```
-python segmentation/annotation_to_segmentation.py [OPTIONS]
-
-Options:
---ann_path  Where the annotation json file is stored (represented as a list of coordiantes)
---output_file_name  Name and path of the output json file that stores the encoded segmentation masks
+(chexlocalize) > python annotation_to_segmentation.py --ann_path <ann_path> --output_path <output_path>
 ```
 
-<a name="synthetic"></a>
+`<ann_path>` is the json file path with raw human annotations.
 
-## Evaluating Localization using Semantic Segmentation Scheme.
-
-Our evaluation script generates the two summary metrics (mIoU and hit rate) for each localization task, as well as the corresponding 95% bootstrap confidence interval (n_boostrap_sample = 1000). 
-
-### Usage
+If you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_annotations_val.json`. Each key of the json file is a single CXR id with its data formatted as follows:
 
 ```
-Usage: python eval_miou.py [OPTIONS]
-
-Options:
-    --phase      	Use validation or test data.
-    --save_dir 		Path to which the summary csv is stored.
+{
+    'patient64622_study1_view1_frontal': {
+        'img_size': [2320, 2828], # (h, w)
+	'Support Devices': [[[1310.68749, 194.47059],
+   		    	     [1300.45214, 194.47059],
+   			     [1290.21691, 201.29412],
+			     ...
+			     [1310.68749, 191.05883],
+			     [1300.45214, 197.88236],
+			     [1293.62865, 211.52943]]],
+ 	'Cardiomegaly': [[[1031.58047, 951.35314],
+   			  [1023.92373, 957.09569],
+   			  [1012.43856, 964.75249],
+			  ...
+			  [1818.31313, 960.92406],
+   			  [1804.91384, 955.1815],
+   			  [1789.60024, 951.35314]]],
+	...
+    },
+    'patient64542_study1_view2_lateral': {
+        ...
+    }
+}
 ```
 
+Each pathology key (e.g. `json_dict['patient64622_study1_view1_frontal']['Support Devices']`) is associated with a nested list of contours and coordinates: `[[coordinates for contour 1], [coordinates for contour 2]]`. The number of contours corresponds to the number of segmentations on a CXR for a given pathology. For example, the below CXR has two segmentations (and therefore would have two contours) for Atelectasis.
+
+<img src="img/example_two_segmentations.png" alt="example CXR with two segmentations" width="350"/>
+
+Each contour holds a list of [X,Y] coordinates that contour the shape of the pathology.
+
+This input json should include only those CXRs with at least one positive ground-truth label, and each CXR in the json should include only those pathologies for which its ground-truth label is positive.
+
+If using your own human annotations, please be sure to save them in a json using the above formatting.
+
+`<output_path>` is the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details).
+
+Running this script on the validation set heatmaps from the CheXlocalize dataset should take about 5 minutes.
+
+<a name="eval"></a>
+## Evaluate localization performance
+
+We use two evaluation metrics to compare segmentations:
+- **mIoU**: mean Intersection over Union is a stricter metric that measures how much, on average, the predicted segmentations overlap with the ground-truth segmentations.
+- **hit rate**: hit rate is a less strict metric that does not require the localization method to locate the full extent of a pathology. Hit rate is based on the pointing game setup, in which credit is given if the most representative point identified by the localization method lies within the ground-truth segmentation. A "hit" indicates that the correct region of the CXR was located regardless of the exact bounds of the binary segmentations. Localization performance is then calculated as the hit rate across the dataset.
+
+![metrics](/img/metrics.png)
+> Left: CXR with ground-truth and saliency method annotations for Pleural Effusion. The segmentations have a low overlap (IoU is 0.078), but pointing game is a "hit" since the saliency method's most representative point is inside of the ground-truth segmentation. Right, CXR with ground-truth and human benchmark annotations for Enlarged Cardiomediastinum. The segmentations have a high overlap (IoU is 0.682), but pointing game is a "miss" since saliency method's most representative point is outside of the ground-truth segmentation.
+
+For more details on mIoU and hit rate, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
+
+To run evaluation, use the following command:
+
 ```
-Usage: python eval_ptgame.py [OPTIONS]
-
-Options:
-    --phase      	Use validation or test data.
-    --save_dir 		Path to which the summary csv is stored.
+(chexlocalize) > python eval.py [FLAGS]
 ```
 
+**Required flags**
+* `--metric`: options are `miou` or `hitrate`
+* `--gt_path`: Directory where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_segmentations_val.json`.
+* `--pred_path`: If `metric = miou`, then this should be the directory where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`.
 
-<a name="license"></a>
+**Optional flags**
+* `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations).
+* `--save_dir`: Where to save evaluation results. Default is current directory.
+* `--seed`: Default is `0`. Random seed to fix for bootstrapping.
 
-## License
+Both `pred_path` (if `metric = miou`) and `gt_path` must be json files where each key is a single CXR id with its data formatted as follows:
 
-This repository is made publicly available under the MIT License.
+```
+{
+    'patient64622_study1_view1_frontal': {
+	    'Enlarged Cardiomediastinum': {
+		'size': [2320, 2828], # (h, w)
+		'counts': '`Vej1Y2iU2c0B?F9G7I6J5K6J6J6J6J6H8G9G9J6L4L4L4L4L3M3M3M3L4L4...'},
+	    ....
+	    'Support Devices': {
+		'size': [2320, 2828], # (h, w)
+		'counts': 'Xid[1R1ZW29G8H9G9H9F:G9G9G7I7H8I7I6K4L5K4L5K4L4L5K4L5J5L5K...'}
+    },
+    ...
+    'patient64652_study1_view1_frontal': {
+	...
+    }
+}
+```
 
-<a name="citing"></a>
+Both `pred_path` (if `metric = miou`) and `gt_path` json files must contain a key for all CXR ids (regardless of whether it has any positive ground-truth labels), and each CXR id key must have values for all ten pathologies (regardless of ground-truth label). In other words, all CXRs and images are indexed. If a CXR has no segmentations, we store a segmentation mask of all zeros. If using your own `pred_path` and `gt_path` json files as input to this script, be sure that they are formatted per the above, with segmentation masks encoded using RLE using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
-## Citing
+This evaluation script generates three csv files:
+* `{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and each pathology.
+* `{miou/hitrate}_bootstrap_results.csv`: 1000 bootstrap samples of mIoU or hit rate for each pathology.
+* `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
 
-If you are using the CheXphoto dataset, please cite this paper:
+<a name="citation"></a>
+## Citation
+
+If you are using the CheXlocalize dataset, or are using our code in your research, please cite our paper:
 
 ```
 @article {Saporta2021.02.28.21252634,
@@ -103,13 +241,6 @@ If you are using the CheXphoto dataset, please cite this paper:
 	elocation-id = {2021.02.28.21252634},
 	year = {2021},
 	doi = {10.1101/2021.02.28.21252634},
-	publisher = {Cold Spring Harbor Laboratory Press},
-	abstract = {Saliency methods, which {\textquotedblleft}explain{\textquotedblright} deep neural networks by producing heat maps that highlight the areas of the medical image that influence model prediction, are often presented to clinicians as an aid in diagnostic decision-making. Although many saliency methods have been proposed for medical imaging interpretation, rigorous investigation of the accuracy and reliability of these strategies is necessary before they are integrated into the clinical setting. In this work, we quantitatively evaluate three saliency methods (Grad-CAM, Grad-CAM++, and Integrated Gradients) across multiple neural network architectures using two evaluation metrics. We establish the first human benchmark for chest X-ray interpretation in a multilabel classification set up, and examine under what clinical conditions saliency maps might be more prone to failure in localizing important pathologies compared to a human expert benchmark. We find that (i) while Grad-CAM generally localized pathologies better than the two other saliency methods, all three performed significantly worse compared with the human benchmark; (ii) the gap in localization performance between Grad-CAM and the human benchmark was largest for pathologies that had multiple instances, were smaller in size, and had shapes that were more complex; (iii) model confidence was positively correlated with Grad-CAM localization performance. Our work demonstrates that several important limitations of saliency methods must be addressed before we can rely on them for deep learning explainability in medical imaging.Competing Interest StatementThe authors have declared no competing interest.Funding StatementN/AAuthor DeclarationsI confirm all relevant ethical guidelines have been followed, and any necessary IRB and/or ethics committee approvals have been obtained.YesThe details of the IRB/oversight body that provided approval or exemption for the research described are given below:The project did not involve human subjects researchI confirm that all necessary patient/participant consent has been obtained and the appropriate institutional forms have been archived, and that any patient/participant/sample identifiers included were not known to anyone (e.g., hospital staff, patients or participants themselves) outside the research group so cannot be used to identify individuals.YesI understand that all clinical trials and any other prospective interventional studies must be registered with an ICMJE-approved registry, such as ClinicalTrials.gov. I confirm that any such study reported in the manuscript has been registered and the trial registration ID is provided (note: if posting a prospective study registered retrospectively, please provide a statement in the trial ID field explaining why the study was not registered in advance).YesI have followed all appropriate research reporting guidelines and uploaded the relevant EQUATOR Network research reporting checklist(s) and other pertinent material as supplementary files, if applicable.YesCheXpert data is available at https://stanfordmlgroup.github.io/competitions/chexpert/. The validation set and corresponding benchmark radiologist annotations will be available online for the purpose of extending the study. https://stanfordmlgroup.github.io/competitions/chexpert/},
-	URL = {https://www.medrxiv.org/content/early/2021/10/08/2021.02.28.21252634},
-	eprint = {https://www.medrxiv.org/content/early/2021/10/08/2021.02.28.21252634.full.pdf},
-	journal = {medRxiv}
+	URL = {https://doi.org/10.1101/2021.02.28.21252634}
 }
-
 ```
-
- 
