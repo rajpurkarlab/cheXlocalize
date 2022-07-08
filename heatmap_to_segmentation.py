@@ -103,7 +103,7 @@ def heatmap_to_mask(map_dir, output_path, threshold_path=''):
         if threshold_path:
             tuning_results = pd.read_csv(threshold_path)
             best_threshold = tuning_results[tuning_results['task'] ==
-                                            'Edema']['mIoU'].values[0]
+                                            'Edema']['threshold'].values[0]
         else:
             best_threshold = np.nan
 
