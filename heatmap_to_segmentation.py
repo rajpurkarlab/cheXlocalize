@@ -4,7 +4,8 @@ using RLE formats using the pycocotools Mask API. The final output is stored in
 a json file.
 
 The default thresholding used in this code is Otsu's method (an automatic global thresholding algorithm provided by cv2). 
-Users can also pass in their self-defined thresholds to binarize the heatmaps through --threshold_path. Make sure the input is a csv file with the same format as the tuning_results.csv file we provided.
+Users can also pass in their self-defined thresholds to binarize the heatmaps through --threshold_path. 
+Make sure the input is a csv file with the same format as the tuning_results.csv file we provided.
 """
 from argparse import ArgumentParser
 import cv2
