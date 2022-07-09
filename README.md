@@ -9,9 +9,11 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 - [Setup](#setup)
 - [Download data](#download)
 - [Generate segmentations from saliency method heatmaps](#heatmap_to_segm)
+	- [Fine tune segmentation thresholds](#threshold)
 - [Generate segmentations from human annotations](#ann_to_segm)
 - [Evaluate localization performance](#eval)
 - [Citation](#citation)
+
 
 <a name="overview"></a>
 ## Overview
@@ -65,7 +67,7 @@ If you'd like to use your own heatmaps/annotations/segmentations, see the releva
 To generate binary segmentations from saliency method heatmaps, run:
 
 ```
-(chexlocalize) > python heatmap_to_segmentation.py --map_dir <map_dir> --output_path <output_path>
+(chexlocalize) > python heatmap_to_segmentation.py --map_dir <map_dir> --threshold_path <threshold_path> --output_path <output_path>
 ```
 
 `<map_dir>` is the directory with pickle files containing the heatmaps. The script extracts the heatmaps from the pickle files.
@@ -114,12 +116,27 @@ If you downloaded the CheXlocalize dataset, then these pickle files are in `/che
 
 If using your own saliency maps, please be sure to save them as pickle files using the above formatting.
 
+`<threshold_path>` is an optional csv file path that you can pass in to use your own thresholds to binarize the heatmaps. As an example, we provided `./tuning_results.csv` which saves the threshold for each pathology that maximize mIoU on the validation set. When passing in your own csv file, make sure to follow the same formatting as our example csv. When no threshold path is passed (default), we will apply Otsu's method (an automatic global thresholding algorithm provided by the cv2 package).
 
 `<output_path>` is the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details).
 
 To store the binary segmentations efficiently, we use RLE format, and the encoding is implemented using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools). If an image has no saliency segmentations, we store a mask of all zeros.
 
 Running this script on the validation set heatmaps from the CheXlocalize dataset should take about 10 minutes.
+
+<a name="threshold"></a>
+### Fine tune segmentation thresholds
+To find the thresholds that maximize mIoU for each pathology on the validation set, run 
+
+```
+(chexlocalize) > python tune_heatmap_threshold.py --map_dir <map_dir> --save_dir <save_dir>
+```
+
+`<map_dir>` is the directory with pickle files containing the heatmaps. 
+
+`<save_dir>` is the directory to save the csv file that stores the tuned thresholds. Default is current directory.
+
+This script will replicate 'tuning_results.csv' when you use `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>`. Running this script should take about 30 minutes.
 
 <a name="ann_to_segm"></a>
 ## Generate segmentations from human annotations
