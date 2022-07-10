@@ -1,39 +1,35 @@
 """
-Find thresholds (used to binarize the heatmaps) that maximizes mIoU on the validation set. 
-Pass in a list of thresholds [0.2.0.3,...,0.8]. Save the best threshold for each pathology in a csv file. 
+Find thresholds (used to binarize the heatmaps) that maximize mIoU on the
+validation set. Pass in a list of potential thresholds [0.2, 0.3, ... , 0.8].
+Save the best threshold for each pathology in a csv file.
 """
-
-import pickle
+from argparse import ArgumentParser
 import glob
 import json
-import torch.nn.functional as F
-from pathlib import Path
 import numpy as np
 import pandas as pd
+from pathlib import Path
+import pickle
+from pycocotools import mask
+import torch.nn.functional as F
 from tqdm import tqdm
 
-from pycocotools import mask
 from eval import calculate_iou
-from heatmap_to_segmentation import pkl_to_mask
 from eval_constants import LOCALIZATION_TASKS
-
-from argparse import ArgumentParser
+from heatmap_to_segmentation import pkl_to_mask
 
 
 def compute_miou(threshold, cam_pkls, gt):
     """
-    Given a threshold and a list of heatmap pickle files, return the miou 
+    Given a threshold and a list of heatmap pickle files, return the mIoU.
 
     Args:
-        threshould (double): the threshold used to convert heatmaps to segmentations
-        cam_pkls (list): a list of heatmap pickle files (for a pathology)
+        threshold (double): the threshold used to convert heatmaps to segmentations
+        cam_pkls (list): a list of heatmap pickle files (for a given pathology)
         gt (dict): dictionary of ground truth segmentation masks
     """
-
     ious = []
-
     for pkl_path in tqdm(cam_pkls):
-
         # break down path to image name and task
         path = str(pkl_path).split('/')
         task = path[-1].split('_')[-2]
@@ -56,11 +52,11 @@ def compute_miou(threshold, cam_pkls, gt):
 
 def tune_threshold(task, gt, cam_dir):
     """
-    For a given pathology, find the threshold that maximizes mIoU 
+    For a given pathology, find the threshold that maximizes mIoU.
 
     Args:
-        task (str): localizatoin task
-        gt (dict): dictionary of the ground truth segmentaiton masks
+        task (str): localization task
+        gt (dict): dictionary of the ground truth segmentation masks
         cam_dir (str): directory with pickle files containing heat maps
     """
     cam_pkls = sorted(list(Path(cam_dir).rglob(f"*{task}_map.pkl")))
@@ -71,23 +67,15 @@ def tune_threshold(task, gt, cam_dir):
 
 
 if __name__ == '__main__':
-
     parser = ArgumentParser()
-    parser.add_argument(
-        '--map_dir',
-        type=str,
-        default='gradcam',
-        help='directory with pickle files containing heat maps')
-    parser.add_argument('--gt_path',
-                        type=str,
-                        help='directory where ground-truth segmentations are \
+    parser.add_argument('--map_dir', type=str,
+                        help='directory with pickle files containing heat maps')
+    parser.add_argument('--gt_path', type=str,
+                        help='json file where ground-truth segmentations are \
                               saved (encoded)')
-    parser.add_argument(
-        '--save_dir',
-        type=str,
-        default='.',
-        help='where to save the best thresholds tuned on the validation set')
-
+    parser.add_argument('--save_dir', type=str, default='.',
+                        help='where to save the best thresholds tuned on the \
+                              validation set')
     args = parser.parse_args()
 
     with open(args.gt_path) as f:

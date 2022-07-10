@@ -206,7 +206,7 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
 	-- `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
     """
     # create save_dir if it does not already exist
-    Path(save_dir).mkdir(exist_ok=True,parents=True)
+    Path(save_dir).mkdir(exist_ok=True, parents=True)
 
     if metric == 'miou':
         ious, cxr_ids = get_ious(gt_path, pred_path, true_pos_only)
@@ -244,11 +244,11 @@ if __name__ == '__main__':
                         help='json path where predicted segmentations are saved \
                               (if metric = miou) or directory with pickle files \
 							  containing heat maps (if metric = hitrate)')
-    parser.add_argument('--true_pos_only', default="True",
+    parser.add_argument('--true_pos_only', default='True',
                         help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
                         ground-truth segmentations)')
-    parser.add_argument('--save_dir', default=".",
+    parser.add_argument('--save_dir', default='.',
                         help='where to save evaluation results')
     parser.add_argument('--seed', type=int, default=0,
                         help='random seed to fix')

@@ -116,7 +116,7 @@ If you downloaded the CheXlocalize dataset, then these pickle files are in `/che
 
 If using your own saliency maps, please be sure to save them as pickle files using the above formatting.
 
-`<threshold_path>` is an optional csv file path that you can pass in to use your own thresholds to binarize the heatmaps. As an example, we provided `./tuning_results.csv` which saves the threshold for each pathology that maximize mIoU on the validation set. When passing in your own csv file, make sure to follow the same formatting as our example csv. When no threshold path is passed (default), we will apply Otsu's method (an automatic global thresholding algorithm provided by the cv2 package).
+`<threshold_path>` is an optional csv file path that you can pass in to use your own thresholds to binarize the heatmaps. As an example, we provide [`./sample/tuning_results.csv`](https://github.com/rajpurkarlab/cheXlocalize/blob/master/sample/tuning_results.csv), which saves the threshold for each pathology that maximizes mIoU on the validation set. When passing in your own csv file, make sure to follow the same formatting as this example csv. By defaul, no threshold path is passed in, in which case we will apply Otsu's method (an automatic global thresholding algorithm provided by the cv2 package).
 
 `<output_path>` is the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details).
 
@@ -126,17 +126,19 @@ Running this script on the validation set heatmaps from the CheXlocalize dataset
 
 <a name="threshold"></a>
 ### Fine tune segmentation thresholds
-To find the thresholds that maximize mIoU for each pathology on the validation set, run 
+To find the thresholds that maximize mIoU for each pathology on the validation set, run:
 
 ```
-(chexlocalize) > python tune_heatmap_threshold.py --map_dir <map_dir> --save_dir <save_dir>
+(chexlocalize) > python tune_heatmap_threshold.py --map_dir <map_dir> --gt_path <gt_path> --save_dir <save_dir>
 ```
 
-`<map_dir>` is the directory with pickle files containing the heatmaps. 
+`<map_dir>` is the directory with pickle files containing the heatmaps.
+
+`<gt_path>` is the json file where ground-truth segmentations are saved (encoded).
 
 `<save_dir>` is the directory to save the csv file that stores the tuned thresholds. Default is current directory.
 
-This script will replicate 'tuning_results.csv' when you use `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>`. Running this script should take about 30 minutes.
+This script will replicate './sample/tuning_results.csv' when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
 
 <a name="ann_to_segm"></a>
 ## Generate segmentations from human annotations
