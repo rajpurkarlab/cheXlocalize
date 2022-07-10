@@ -1,11 +1,13 @@
 """
-Converts saliency heat maps to binary segmentations and encodes segmentations
+Converts saliency heatmaps to binary segmentations and encodes segmentations
 using RLE formats using the pycocotools Mask API. The final output is stored in
 a json file.
 
-The default thresholding used in this code is Otsu's method (an automatic global thresholding algorithm provided by cv2). 
-Users can also pass in their self-defined thresholds to binarize the heatmaps through --threshold_path. 
-Make sure the input is a csv file with the same format as the tuning_results.csv file we provided.
+The default thresholding used in this code is Otsu's method (an automatic global
+thresholding algorithm provided by cv2). Users can also pass in their own
+self-defined thresholds to binarize the heatmaps through --threshold_path. If
+doing this, make sure the input is a csv file with the same format as the
+provided file sample/tuning_results.csv.
 """
 from argparse import ArgumentParser
 import cv2
@@ -25,14 +27,14 @@ from utils import encode_segmentation
 
 def cam_to_segmentation(cam_mask, threshold=np.nan):
     """
-    Threshold a saliency heat map to binary segmentation mask.
-
+    Threshold a saliency heatmap to binary segmentation mask.
     Args:
         cam_mask (torch.Tensor): heat map in the original image size (H x W).
             Will squeeze the tensor if there are more than two dimensions.
+        threshold (np.float64): threshold to use
 
     Returns:
-        segmentation_output (np.array): binary segmentation output
+        segmentation (np.ndarray): binary segmentation output
     """
     if (len(cam_mask.size()) > 2):
         cam_mask = cam_mask.squeeze()
@@ -44,14 +46,11 @@ def cam_to_segmentation(cam_mask, threshold=np.nan):
     mask = mask.div(mask.max()).data
     mask = mask.cpu().detach().numpy()
 
-    # use otsu's method if no threshold is passed in
+    # use Otsu's method to find threshold if no threshold is passed in
     if np.isnan(threshold):
         mask = np.uint8(255 * mask)
-
-        # Use Otsu's method to find threshold
         maxval = np.max(mask)
         segmentation = cv2.threshold(mask, 0, maxval, cv2.THRESH_OTSU)[1]
-
     else:
         segmentation = np.array(mask > threshold, dtype="int")
 
@@ -65,7 +64,10 @@ def pkl_to_mask(pkl_path, threshold=np.nan):
 
     Args:
         pkl_path (str): path to the model output pickle file
-        task (str): localization task
+        threshold (np.float64): threshold to use
+
+    Returns:
+        segmentation (np.ndarray): binary segmentation output
     """
     # load pickle file, get saliency map and resize
     info = pickle.load(open(pkl_path, 'rb'))
@@ -82,7 +84,7 @@ def pkl_to_mask(pkl_path, threshold=np.nan):
     return segmentation
 
 
-def heatmap_to_mask(map_dir, output_path, threshold_path=''):
+def heatmap_to_mask(map_dir, output_path, threshold_path):
     """
     Converts all saliency maps to segmentations and stores segmentations in a
     json file.
@@ -103,8 +105,7 @@ def heatmap_to_mask(map_dir, output_path, threshold_path=''):
         # get encoded segmentation mask
         if threshold_path:
             tuning_results = pd.read_csv(threshold_path)
-            best_threshold = tuning_results[tuning_results['task'] ==
-                                            'Edema']['threshold'].values[0]
+            best_threshold = tuning_results[tuning_results['task'] == task]['threshold'].values[0]
         else:
             best_threshold = np.nan
 
@@ -123,6 +124,7 @@ def heatmap_to_mask(map_dir, output_path, threshold_path=''):
             results[img_id][task] = encoded_mask
 
     # save to json
+    Path(os.path.dirname(output_path)).mkdir(exist_ok=True, parents=True)
     with open(output_path, 'w') as f:
         json.dump(results, f)
     print(f'Segmentation masks (in RLE format) saved to {output_path}')
@@ -130,22 +132,14 @@ def heatmap_to_mask(map_dir, output_path, threshold_path=''):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument(
-        '--map_dir',
-        type=str,
-        help='directory with pickle files containing heat maps')
-    parser.add_argument(
-        '--threshold_path',
-        type=str,
-        default='',
-        help=
-        'csv file that stores the threshold tuned on the validation set. Use Otsu'
-        's method if no path is given.')
-    parser.add_argument('--output_path',
-                        type=str,
+    parser.add_argument('--map_dir', type=str,
+                        help='directory with pickle files containing heatmaps')
+    parser.add_argument('--threshold_path', type=str,
+                        help="csv file that stores pre-defined threshold values. \
+                        If no path is given, script uses Otsu's.")
+    parser.add_argument('--output_path', type=str,
                         default='./saliency_segmentations.json',
                         help='json file path for saving encoded segmentations')
-
     args = parser.parse_args()
 
     heatmap_to_mask(args.map_dir, args.output_path, args.threshold_path)
