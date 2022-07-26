@@ -108,7 +108,7 @@ def regression_prob(input_path, output_path):
     """
     Run regression on probability and store results in csv
     """
-    gradcam_iou = pd.read_csv(f'{input_path}/test_gradcam_densenet_ensemble_miou_all.csv')
+    gradcam_iou = pd.read_csv(f'{input_path}/test_gradcam_densenet_ensemble_full_iou.csv')
     gradcam_pt = pd.read_csv(f'{input_path}/test_gradcam_densenet_ensemble_ptgame.csv') 
     probs_df = pd.read_csv(f'{input_path}/prob.csv')
 
