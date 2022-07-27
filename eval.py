@@ -31,7 +31,7 @@ def calculate_iou(pred_mask, gt_mask, true_pos_only):
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
     else:
-        if np.sum(gt_mask) == 0: 
+        if np.sum(gt_mask) == 0:
             iou_score = np.nan
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
