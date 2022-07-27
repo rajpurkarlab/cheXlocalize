@@ -31,7 +31,7 @@ def calculate_iou(pred_mask, gt_mask, true_pos_only):
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
     else:
-        if np.sum(gt_mask) == 0:
+        if np.sum(gt_mask) == 0: 
             iou_score = np.nan
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
@@ -217,6 +217,7 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     else:
         raise ValueError('`metric` must be either `miou` or `hitrate`')
 
+    mIoU = metric_df.mean().round(3).values
     metric_df['img_id'] = cxr_ids
     metric_df.to_csv(f'{save_dir}/{metric}_results.csv', index=False)
 
@@ -228,7 +229,9 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     for task in bs_df.columns:
         records.append(create_ci_record(bs_df[task], task))
 
-    summary_df = pd.DataFrame.from_records(records)
+    summary_df = pd.DataFrame.from_records(records).sort_values(by = 'name')
+    summary_df['bs_mean'] = summary_df['mean']
+    summary_df['mean'] = mIoU
     print(summary_df)
     summary_df.to_csv(f'{save_dir}/{metric}_summary_results.csv', index=False)
 
