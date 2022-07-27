@@ -217,7 +217,7 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     else:
         raise ValueError('`metric` must be either `miou` or `hitrate`')
 
-    mIoU = metric_df.mean().round(3).values
+    data_mean = metric_df.mean().round(3).values
     metric_df['img_id'] = cxr_ids
     metric_df.to_csv(f'{save_dir}/{metric}_results.csv', index=False)
 
@@ -231,7 +231,7 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
 
     summary_df = pd.DataFrame.from_records(records).sort_values(by = 'name')
     summary_df['bs_mean'] = summary_df['mean']
-    summary_df['mean'] = mIoU
+    summary_df['mean'] = data_mean
     print(summary_df)
     summary_df.to_csv(f'{save_dir}/{metric}_summary_results.csv', index=False)
 
