@@ -20,12 +20,13 @@ import pickle
 import sys
 import torch.nn.functional as F
 from tqdm import tqdm
-
+import torch
+import io
 from eval_constants import LOCALIZATION_TASKS
 from utils import encode_segmentation
 
 
-def cam_to_segmentation(cam_mask, threshold=np.nan):
+def cam_to_segmentation(cam_mask, threshold=np.nan, smoothing = False, k = 0):
     """
     Threshold a saliency heatmap to binary segmentation mask.
     Args:
@@ -46,9 +47,16 @@ def cam_to_segmentation(cam_mask, threshold=np.nan):
     mask = mask.div(mask.max()).data
     mask = mask.cpu().detach().numpy()
 
+    
     # use Otsu's method to find threshold if no threshold is passed in
     if np.isnan(threshold):
         mask = np.uint8(255 * mask)
+
+        if smoothing:
+            heatmap = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
+            gray_img = cv2.boxFilter(cv2.cvtColor(heatmap, cv2.COLOR_RGB2GRAY),-1,(k,k))
+            mask = 255-gray_img
+        
         maxval = np.max(mask)
         segmentation = cv2.threshold(mask, 0, maxval, cv2.THRESH_OTSU)[1]
     else:
@@ -57,7 +65,7 @@ def cam_to_segmentation(cam_mask, threshold=np.nan):
     return segmentation
 
 
-def pkl_to_mask(pkl_path, threshold=np.nan):
+def pkl_to_mask(pkl_path, threshold=np.nan, smoothing = False, k = 0):
     """
     Load pickle file, get saliency map and resize to original image dimension.
     Threshold the heatmap to binary segmentation.
@@ -70,7 +78,14 @@ def pkl_to_mask(pkl_path, threshold=np.nan):
         segmentation (np.ndarray): binary segmentation output
     """
     # load pickle file, get saliency map and resize
-    info = pickle.load(open(pkl_path, 'rb'))
+    class CPU_Unpickler(pickle.Unpickler):
+        def find_class(self, module, name):
+            if module == 'torch.storage' and name == '_load_from_bytes':
+                return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
+            else: return super().find_class(module, name)
+
+    info = CPU_Unpickler(open(pkl_path,'rb')).load()
+    # info = pickle.load(open(pkl_path, 'rb'))
     saliency_map = info['map']
     img_dims = info['cxr_dims']
     map_resized = F.interpolate(saliency_map,
@@ -79,12 +94,12 @@ def pkl_to_mask(pkl_path, threshold=np.nan):
                                 align_corners=False)
 
     # convert to segmentation
-    segmentation = cam_to_segmentation(map_resized, threshold=threshold)
+    segmentation = cam_to_segmentation(map_resized, threshold=threshold, smoothing=smoothing, k = k)
 
     return segmentation
 
 
-def heatmap_to_mask(map_dir, output_path, threshold_path):
+def heatmap_to_mask(map_dir, output_path, threshold_path, smoothing = False, k = 0):
     """
     Converts all saliency maps to segmentations and stores segmentations in a
     json file.
@@ -109,7 +124,7 @@ def heatmap_to_mask(map_dir, output_path, threshold_path):
         else:
             best_threshold = np.nan
 
-        segmentation = pkl_to_mask(pkl_path, threshold=best_threshold)
+        segmentation = pkl_to_mask(pkl_path, threshold=best_threshold, smoothing=smoothing, k = k)
         encoded_mask = encode_segmentation(segmentation)
 
         # add image and segmentation to results dict
@@ -140,6 +155,11 @@ if __name__ == '__main__':
     parser.add_argument('--output_path', type=str,
                         default='./saliency_segmentations.json',
                         help='json file path for saving encoded segmentations')
+    parser.add_argument('--if_smoothing', type=bool,
+                        help="True if apply smoothing to heatmap, False if not")
+    parser.add_argument('--k', type=int,
+                        help="Size of the kernel used for box filter smoothing")
+    
     args = parser.parse_args()
 
-    heatmap_to_mask(args.map_dir, args.output_path, args.threshold_path)
+    heatmap_to_mask(args.map_dir, args.output_path, args.threshold_path, args.if_smoothing, args.k)
