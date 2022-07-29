@@ -116,7 +116,7 @@ If you downloaded the CheXlocalize dataset, then these pickle files are in `/che
 
 If using your own saliency maps, please be sure to save them as pickle files using the above formatting.
 
-`<threshold_path>` is an optional csv file path that you can pass in to use your own thresholds to binarize the heatmaps. As an example, we provide [`./sample/tuning_results.csv`](https://github.com/rajpurkarlab/cheXlocalize/blob/master/sample/tuning_results.csv), which saves the threshold for each pathology that maximizes mIoU on the validation set. When passing in your own csv file, make sure to follow the same formatting as this example csv. By defaul, no threshold path is passed in, in which case we will apply Otsu's method (an automatic global thresholding algorithm provided by the cv2 package).
+`<threshold_path>` is an optional csv file path that you can pass in to use your own thresholds to binarize the heatmaps. As an example, we provide [`./sample/tuning_results.csv`](https://github.com/rajpurkarlab/cheXlocalize/blob/master/sample/tuning_results.csv), which contains the threshold for each pathology that maximizes mIoU on the validation set. When passing in your own csv file, make sure to follow the same formatting as this example csv. By default, no threshold path is passed in, in which case we will apply Otsu's method (an automatic global thresholding algorithm provided by the cv2 package).
 
 `<output_path>` is the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details).
 
