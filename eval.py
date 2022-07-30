@@ -8,7 +8,8 @@ from PIL import Image
 from pycocotools import mask
 import torch.nn.functional as F
 from tqdm import tqdm
-
+import torch
+import io
 from eval_constants import LOCALIZATION_TASKS
 
 
@@ -135,7 +136,13 @@ def create_map(pkl_path):
     """
     Create saliency map of original img size·
     """
-    info = pickle.load(open(pkl_path,'rb'))
+    class CPU_Unpickler(pickle.Unpickler):
+        def find_class(self, module, name):
+            if module == 'torch.storage' and name == '_load_from_bytes':
+                return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
+            else: return super().find_class(module, name)
+
+    info = CPU_Unpickler(open(pkl_path,'rb')).load()
     saliency_map = info['map']
     img_dims = info['cxr_dims']
     map_resized = F.interpolate(saliency_map, size=(img_dims[1],img_dims[0]), mode='bilinear', align_corners=False)
