@@ -12,6 +12,9 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 	- [Fine tune segmentation thresholds](#threshold)
 - [Generate segmentations from human annotations](#ann_to_segm)
 - [Evaluate localization performance](#eval)
+- [Compute pathology features](#path_features)
+- [Run regressions on pathology features](#regression_pathology)
+- [Run regressions on model assurance](#regression_model_assurance)
 - [Citation](#citation)
 
 
@@ -213,8 +216,8 @@ To run evaluation, use the following command:
 
 **Required flags**
 * `--metric`: options are `miou` or `hitrate`
-* `--gt_path`: Directory where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_segmentations_val.json`.
-* `--pred_path`: If `metric = miou`, then this should be the directory where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`.
+* `--gt_path`: Path to file where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_segmentations_val.json`.
+* `--pred_path`: If `metric = miou`, then this should be the path to file where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or `annotation_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`.
 
 **Optional flags**
 * `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations).
@@ -244,9 +247,52 @@ Both `pred_path` (if `metric = miou`) and `gt_path` must be json files where eac
 Both `pred_path` (if `metric = miou`) and `gt_path` json files must contain a key for all CXR ids (regardless of whether it has any positive ground-truth labels), and each CXR id key must have values for all ten pathologies (regardless of ground-truth label). In other words, all CXRs and images are indexed. If a CXR has no segmentations, we store a segmentation mask of all zeros. If using your own `pred_path` and `gt_path` json files as input to this script, be sure that they are formatted per the above, with segmentation masks encoded using RLE using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
 This evaluation script generates three csv files:
-* `{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and each pathology.
+* `{miou/hitrate}_results_per_cxr.csv`: IoU or hit/miss results for each CXR and each pathology.
 * `{miou/hitrate}_bootstrap_results.csv`: 1000 bootstrap samples of mIoU or hit rate for each pathology.
 * `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
+
+<a name="path_features"></a>
+## Compute pathology features
+We define four pathological features: (1) number of instances (for example, bilateral Pleural Effusion would have two instances, whereas there is only one instance for Cardiomegaly), (2) size (pathology area with respect to the area of the whole CXR), (3) elongation and (4) irrectangularity (the last two features measure the complexity of the pathology shape and were calculated by fitting a rectangle of minimum area enclosing the binary mask).
+
+To compute the four pathology features, run:
+
+```
+(chexlocalize) > python compute_pathology_features.py [FLAGS]
+```
+
+**Required flags**
+* `--gt_ann`: Path to json file with raw ground-truth annotations. If you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_annotations_val.json`.
+* `--gt_seg`: Path to json file with ground-truth segmentations (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_segmentations_val.json`.
+
+**Optional flags**
+* `--save_dir`: Where to save four pathology feature dataframes as csv files. Default is current directory.
+
+Note that we use the ground-truth annotations to extract the number of instances, and we use the ground-truth segmentation masks to calculate area, elongation and rectangularity. We chose to extract number of instances from annotations because sometimes radiologists draw two instances for a pathology that are overlapping; in this case, the number of annotations would be 2, but the number of segmentations would be 1.
+
+<a name="regression_pathology"></a>
+## Run regressions on pathology features
+We provide a script to run a simple linear regression with the evaluation metric (IoU or hit rate) as the dependent variable (to understand the relationship between the geometric features of a pathology and saliency method localization performance). Each regression uses one of the above four geometric features as a single independent variable.
+
+```
+(chexlocalize) > python regression.py [FLAGS]
+```
+
+**Required flags**
+* `--features_dir`: Path to directory that holds four csv files: `area_ratio.csv`, `elongation.csv`, `num_instances.csv`, and `rec_area_ratio.csv`. These four files are the output of `compute_pathology_features.py`.
+* `--pred_miou_results`: path to csv file with saliency method IoU results for each CXR and each pathology. This is the output of `eval.py` called `miou_results_per_cxr.csv`.
+* `--pred_hitrate_results`: path to csv file with saliency method hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitrate_results_per_cxr.csv`.
+
+**Optional flags**
+* `--evalute_hb`: Default is `False`. If true, evaluate human benchmark in addition to saliency method. If `True`, the flags `hb_miou_results` and `hb_hitrate_results` (below) are also required. If `True`, additional regressions will be run using the difference between the evaluation metrics of the saliency method pipeline and the human benchmark as the dependent variable (to understand the relationship between the geometric features of a pathology and the gap in localization performance between the saliency method pipeline and the human benchmark).
+* `--hb_miou_results`: Path to csv file with human benchmark IoU results for each CXR and each pathology. This is the output of `eval.py` called `miou_results_per_cxr.csv`.
+* `--hb_hitrate_results`: Path to csv file with human benchmark hit/miss results for each CXR and each pathology. TODO: This is the output of `eval.py` called `hitrate_results_per_cxr.csv`.
+* `--save_dir`: Where to save regression results. Default is current directory. If `evaluate_hb` is `True`, four files will be saved: `regression_pred_miou.csv`, `regression_pred_hitrate.csv`, `regression_miou_diff.csv`, `regression_hitrate_diff.csv`. If `evaluate_hb` is `False`, only two files will be saved: `regression_pred_miou.csv`, `regression_pred_hitrate.csv`.
+
+In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), only the true positive slice was included in each regression (see Table 2). Each feature is normalized using z-score normalization (TODO: is this true and not min max??) and the regression coefficient can be interpreted as the effect of that geometric feature on the evaluation metric at hand.
+
+<a name="regression_model_assurance"></a>
+## Run regressions on model assurance
 
 <a name="citation"></a>
 ## Citation

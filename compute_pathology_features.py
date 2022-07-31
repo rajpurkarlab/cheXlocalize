@@ -1,23 +1,23 @@
-""" 
-Script that computes pathological features.
-We used the original radiologist annotations to extract the number of instances, and segmentation masks to calculate areas, elongation and rectangularity (rec_area_ratio).
-You can also extract number of instances from segmentation masks. The small difference is sometimes radiologists draw two pathologies that are overlapping. From radiologist annotation file,
-the number of instance is 2. But using segmentation (since the pathologies overlapped), the number of instance would be 1.
+"""
+Compute four pathological features: (1) number of instances (for example, bilateral Pleural Effusion would have two instances, whereas there is only one instance for Cardiomegaly), (2) size (pathology area with respect to the area of the whole CXR), (3) elongation and (4) irrectangularity (the last two features measure the complexity of the pathology shape and were calculated by fitting a rectangle of minimum area enclosing the binary mask).
 
- """
-import glob
+Note that we use the ground-truth annotations to extract the number of instances, and we use the ground-truth segmentation masks to calculate area, elongation and rectangularity. We chose to extract number of instances from annotations because sometimes radiologists draw two instances for a pathology that are overlapping; in this case, the number of annotations would be 2, but the number of segmentations would be 1.
+"""
+from argparse import ArgumentParser
 import cv2
+import glob
 import json
-import pickle
 import numpy as np
 import pandas as pd
+import pickle
 from pycocotools import mask
+
 from eval_constants import LOCALIZATION_TASKS
 
 
 def get_geometric_features(segm):
     """
-    Given a segmentation mask, returns geometric features
+    Given a segmentation mask, return geometric features.
 
     Args:
         segm (np.array): the binary segmentation mask
@@ -28,7 +28,7 @@ def get_geometric_features(segm):
     # find contours
     contours, _ = cv2.findContours(segm.copy(), 1, 1)
 
-    # get number of instances and the area
+    # get number of instances and area
     n_instance = len(contours)
     area_ratio = np.sum(segm) / (segm.shape[0] * segm.shape[1])
 
@@ -46,30 +46,21 @@ def get_geometric_features(segm):
     return n_instance, area_ratio, elongation, rec_area_ratio
 
 
-if __name__ == '__main__':
-    output_path = '.'
-    test_labels = pd.read_csv('../cheXlocalize_data_code/dataset/test_labels.csv')
-    test_labels['img_id'] = test_labels.Path.map(
-        lambda x: '_'.join(x.split('/')[1:]).replace('.jpg', '')).tolist()
-    all_ids = test_labels['img_id'].tolist()
-
-    # load ground truth annotations (we use it to extract number of instances)
-    gt_ann_dir = f'../cheXlocalize_data_code/dataset/annotations/ground_truth/gt_annotations_test.json'
-    with open(gt_ann_dir) as f:
+def main(args):
+    # load ground-truth annotations (needed to extract number of instances)
+    # and ground-truth segmentations
+    with open(args.gt_ann) as f:
         gt_ann = json.load(f)
-
-    # load ground truth segmentations
-    gt_segm_dir = f'../cheXlocalize_data_code/dataset/segmentations/ground_truth/gt_segmentations_test.json'
-    with open(gt_segm_dir) as f:
-        gt_segm = json.load(f)
+    with open(args.gt_seg) as f:
+        gt_seg = json.load(f)
 
     # extract features from all cxrs with at least one pathology
     all_instances = {}
     all_areas = {}
     all_elongations = {}
     all_rec_area_ratios = {}
-
-    pos_ids = sorted(gt_segm.keys())
+    all_ids = sorted(gt_ann.keys())
+    pos_ids = sorted(gt_seg.keys())
     for task in sorted(LOCALIZATION_TASKS):
         print(task)
         n_instances = []
@@ -83,12 +74,15 @@ if __name__ == '__main__':
             rec_area_ratio = np.nan
             # calculate features for cxr with a pathology segmentation
             if img_id in pos_ids:
-                gt_item = gt_segm[img_id][task]
+                gt_item = gt_seg[img_id][task]
                 gt_mask = mask.decode(gt_item)
                 if np.sum(gt_mask) > 0:
-                    n_instance = len(gt_ann[img_id][task]) if task in gt_ann[img_id] else 0  # use radiologist annotation to get number of instances
-                    n_instance_segm, area, elongation, rec_area_ratio = get_geometric_features(gt_mask)  # use segmentation to get other features
-
+                    # use annotation to get number of instances
+                    n_instance = len(gt_ann[img_id][task]) \
+                            if task in gt_ann[img_id] else 0
+                    # use segmentation to get other features
+                    n_instance_segm, area, elongation, rec_area_ratio = \
+                            get_geometric_features(gt_mask)
             n_instances.append(n_instance)
             areas.append(area)
             elongations.append(elongation)
@@ -108,7 +102,20 @@ if __name__ == '__main__':
     elongation_df['img_id'] = all_ids
     rec_area_ratio_df['img_id'] = all_ids
 
-    instance_df.to_csv(f'./num_instances_test.csv', index=False)
-    area_df.to_csv(f'./area_ratio_test.csv', index=False)
-    elongation_df.to_csv('elogation_test.csv', index=False)
-    rec_area_ratio_df.to_csv('rec_area_ratio_test.csv', index=False)
+    instance_df.to_csv(f'{args.save_dir}/num_instances.csv', index=False)
+    area_df.to_csv(f'{args.save_dir}/area_ratio.csv', index=False)
+    elongation_df.to_csv(f'{args.save_dir}/elongation.csv', index=False)
+    rec_area_ratio_df.to_csv(f'{args.save_dir}/rec_area_ratio.csv', index=False)
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--gt_ann', type=str,
+                        help='path to json file with raw ground-truth annotations')
+    parser.add_argument('--gt_seg', type=str,
+                        help='path to json file with ground-truth segmentations \
+                              (encoded)')
+    parser.add_argument('--save_dir', default='.',
+                        help='where to save feature dataframes')
+    args = parser.parse_args()
+    main(args)

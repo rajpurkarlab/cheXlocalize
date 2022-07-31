@@ -218,10 +218,10 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
         raise ValueError('`metric` must be either `miou` or `hitrate`')
 
     metric_df['img_id'] = cxr_ids
-    metric_df.to_csv(f'{save_dir}/{metric}_results.csv', index=False)
+    metric_df.to_csv(f'{save_dir}/{metric}_results_per_cxr.csv', index=False)
 
     bs_df = bootstrap_metric(metric_df, 1000)
-    bs_df.to_csv(f'{save_dir}/{metric}_bootstrap_results.csv', index=False)
+    bs_df.to_csv(f'{save_dir}/{metric}_bootstrap_results_per_cxr.csv', index=False)
 
     # get confidence intervals
     records = []
