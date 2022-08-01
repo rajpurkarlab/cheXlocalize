@@ -272,10 +272,10 @@ Note that we use the ground-truth annotations to extract the number of instances
 
 <a name="regression_pathology"></a>
 ## Run regressions on pathology features
-We provide a script to run a simple linear regression with the evaluation metric (IoU or hit rate) as the dependent variable (to understand the relationship between the geometric features of a pathology and saliency method localization performance). Each regression uses one of the above four geometric features as a single independent variable.
+We provide a script to run a simple linear regression with the evaluation metric (IoU or hit/miss) as the dependent variable (to understand the relationship between the geometric features of a pathology and saliency method localization performance). Each regression uses one of the above four geometric features as a single independent variable.
 
 ```
-(chexlocalize) > python regression.py [FLAGS]
+(chexlocalize) > python regression_pathology_features.py [FLAGS]
 ```
 
 **Required flags**
@@ -289,10 +289,17 @@ We provide a script to run a simple linear regression with the evaluation metric
 * `--hb_hitrate_results`: Path to csv file with human benchmark hit/miss results for each CXR and each pathology. TODO: This is the output of `eval.py` called `hitrate_results_per_cxr.csv`.
 * `--save_dir`: Where to save regression results. Default is current directory. If `evaluate_hb` is `True`, four files will be saved: `regression_pred_miou.csv`, `regression_pred_hitrate.csv`, `regression_miou_diff.csv`, `regression_hitrate_diff.csv`. If `evaluate_hb` is `False`, only two files will be saved: `regression_pred_miou.csv`, `regression_pred_hitrate.csv`.
 
-In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), only the true positive slice was included in each regression (see Table 2). Each feature is normalized using z-score normalization (TODO: is this true and not min max??) and the regression coefficient can be interpreted as the effect of that geometric feature on the evaluation metric at hand.
+In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), only the true positive slice was included in each regression (see Table 2). Each feature is normalized using min-max normalization and the regression coefficient can be interpreted as the effect of that geometric feature on the evaluation metric at hand. The regression results report the 95% confidence interval and the Bonferroni corrected p-values. For confidence intervals and p-values, we use the standard calculation for linear models.
 
 <a name="regression_model_assurance"></a>
 ## Run regressions on model assurance
+We provide a script to run a simple linear regression for each pathology using the model’s probability output as the single independent variable and using the predicted evaluation metric (IoU or hit/miss) as the dependent variable. The script also runs a simple regression that uses the same approach as above, but that includes all 10 pathologies.
+
+```
+(chexlocalize) > python regression_model_assurance.py [FLAGS]
+```
+
+Note that in [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), for each of the 11 regressions, we use the _full_ dataset since the analysis of false positives and false negatives was also of interest (see Table 3). In addition to the linear regression coefficients, the regression results also report the Spearman correlation coefficients to capture any potential non-linear associations.
 
 <a name="citation"></a>
 ## Citation

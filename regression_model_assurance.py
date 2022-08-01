@@ -7,10 +7,8 @@ from eval_constants import LOCALIZATION_TASKS
 from utils import run_linear_regression
 
 
-def regression_prob(input_path, output_path):
-    """
-    Run regression on probability and store results in csv
-    """
+def run_model_assurance_regression(args):
+    """Run regression using model probability as the independent variable."""
     gradcam_iou = pd.read_csv(f'{input_path}/test_gradcam_densenet_ensemble_full_iou.csv')
     gradcam_pt = pd.read_csv(f'{input_path}/test_gradcam_densenet_ensemble_ptgame.csv') 
     probs_df = pd.read_csv(f'{input_path}/prob.csv')
@@ -41,8 +39,6 @@ def regression_prob(input_path, output_path):
         coef_summary.to_csv(f'{output_path}/regression_prob_{y}.csv', index = False)
 
 
-
-
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('--map_dir', type=str,
@@ -58,4 +54,4 @@ if __name__ == "__main__":
     parser.add_argument('--k', type=int,
                         help="Size of the kernel used for box filter smoothing")
     args = parser.parse_args()
-    regression_prob(input_path, output_path)
+    run_model_assurance_regression(args)

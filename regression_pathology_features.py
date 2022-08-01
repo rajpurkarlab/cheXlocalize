@@ -31,9 +31,7 @@ def format_ci(row):
 
     # CI on linear regression coefficients
     p_val = row['coef_pval']
-    #TODO: when does feature = prob, and why *4?
-    if row['feature'] != 'prob':
-        p_val *= 4
+    p_val *= 4 # to get Bonferroni corrected p-values
     stats_sig_level = format_stats_sig(p_val)
     mean = row['mean']
     upper = row['upper']
@@ -41,10 +39,8 @@ def format_ci(row):
     row['Linear regression coefficients'] =  f'{mean}, ({lower}, {upper}){stats_sig_level}'
 
     # CI on spearman correlations
-    #TODO: when does feature = prob, and why *4?
     p_val = row['corr_pval']
-    if row['feature'] != 'prob':
-        p_val *= 4
+    p_val *= 4 # to get Bonferroni corrected p-values
     stats_sig_level = format_stats_sig(p_val)
     mean = row['corr']
     upper = row['corr_upper']
@@ -54,7 +50,7 @@ def format_ci(row):
     return row
 
 
-def regression_geometric_features(args):
+def run_features_regression(args):
     # read localization performance
     pred_miou_results = pd.read_csv(args.pred_miou_results)
     pred_hitrate_results = pd.read_csv(args.pred_hitrate_results)
@@ -115,8 +111,9 @@ def regression_geometric_features(args):
             overall_regression[feature] = normalize(overall_regression[feature])
             results = run_linear_regression(overall_regression, 'Overall', y, feature)
             coef_summary = pd.concat([coef_summary, results])
-        # TODO: is there a reason we don't include Spearman correlation here?
-        coef_summary = coef_summary.apply(format_ci,axis = 1).iloc[:,-3:-1]
+
+        coef_summary = coef_summary.apply(format_ci,axis = 1)\
+                        [['task', 'Linear regression coefficients']]
         coef_summary.to_csv(f'{args.save_dir}/regression_{y}.csv', index=False)
 
 if __name__ == "__main__":
@@ -144,4 +141,4 @@ if __name__ == "__main__":
                         help='where to save regression results')
     args = parser.parse_args()
 
-    regression_geometric_features(args)
+    run_features_regression(args)
