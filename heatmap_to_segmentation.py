@@ -88,7 +88,7 @@ def cam_to_segmentation(cam_mask, threshold=np.nan, smoothing=False, k=0):
     return segmentation
 
 
-def pkl_to_mask(pkl_path, threshold=np.nan, smoothing=False, k=0):
+def pkl_to_mask(pkl_path, threshold=np.nan, prob_cutoff=0, smoothing=False, k=0):
     """
     Load pickle file, get saliency map and resize to original image dimension.
     Threshold the heatmap to binary segmentation.
@@ -118,11 +118,16 @@ def pkl_to_mask(pkl_path, threshold=np.nan, smoothing=False, k=0):
                                 mode='bilinear',
                                 align_corners=False)
 
-    # convert to segmentation
-    segmentation = cam_to_segmentation(map_resized,
-                                       threshold=threshold,
-                                       smoothing=smoothing,
-                                       k=k)
+    # if we specify a probability cutoff, then if the cxr has predicted probability that is lower than the cutoff, 
+    # we force the predicted segmentation mask to be all zero.
+    if info['prob'] < prob_cutoff:
+        segmentation = np.zeros((img_dims[1], img_dims[0]))
+    else:
+        # convert to segmentation
+        segmentation = cam_to_segmentation(map_resized,
+                                        threshold=threshold,
+                                        smoothing=smoothing,
+                                        k=k)
 
     return segmentation
 
@@ -130,6 +135,7 @@ def pkl_to_mask(pkl_path, threshold=np.nan, smoothing=False, k=0):
 def heatmap_to_mask(map_dir,
                     output_path,
                     threshold_path,
+                    probability_threshold_path,
                     smoothing=False,
                     k=0):
     """
@@ -150,6 +156,7 @@ def heatmap_to_mask(map_dir,
             continue
 
         # get encoded segmentation mask
+        # check if users use self-define threshold to threshold a heatmap
         if threshold_path:
             tuning_results = pd.read_csv(threshold_path)
             best_threshold = tuning_results[tuning_results['task'] ==
@@ -157,8 +164,17 @@ def heatmap_to_mask(map_dir,
         else:
             best_threshold = np.nan
 
+        # check if users use a probability cutoff to enfore a segmentation mask to be all zeros
+        if probability_threshold_path:
+            prob_results = pd.read_csv(probability_threshold_path)
+            max_miou = prob_results.loc[prob_results.groupby(['task'])['mIoU'].agg('idxmax')]
+            prob_cutoff = max_miou[max_miou['task'] == task]['prob_threshold'].values[0]
+        else:
+            prob_cutoff = 0
+
         segmentation = pkl_to_mask(pkl_path,
                                    threshold=best_threshold,
+                                   prob_cutoff=prob_cutoff,
                                    smoothing=smoothing,
                                    k=k)
         encoded_mask = encode_segmentation(segmentation)
@@ -191,6 +207,12 @@ if __name__ == '__main__':
         type=str,
         help="csv file that stores pre-defined threshold values. \
                         If no path is given, script uses Otsu's.")
+    parser.add_argument(
+        '--probability_threshold_path',
+        type=str,
+        help="csv file that stores pre-defined probability cutoffs. \
+                    If a cutoff is given, then we force the predicted segmentation to be all zero \
+                        if the predicted probability is below the cutoff")
     parser.add_argument('--output_path',
                         type=str,
                         default='./saliency_segmentations.json',
@@ -207,4 +229,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     heatmap_to_mask(args.map_dir, args.output_path, args.threshold_path,
-                    args.if_smoothing, args.k)
+                    args.probability_threshold_path,args.if_smoothing, args.k)

@@ -8,8 +8,7 @@ from PIL import Image
 from pycocotools import mask
 import torch.nn.functional as F
 from tqdm import tqdm
-import torch
-import io
+
 from eval_constants import LOCALIZATION_TASKS
 
 
@@ -32,7 +31,7 @@ def calculate_iou(pred_mask, gt_mask, true_pos_only):
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
     else:
-        if np.sum(gt_mask) == 0:
+        if np.sum(union) == 0:
             iou_score = np.nan
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
@@ -63,10 +62,10 @@ def get_ious(gt_path, pred_path, true_pos_only):
         pred_dict = json.load(f)
 
     ious = {}
-    cxr_ids = sorted(gt_dict.keys())
     tasks = sorted(LOCALIZATION_TASKS)
 
     for task in tasks:
+        cxr_ids = sorted(gt_dict.keys())
         print(f'Evaluating {task}')
         ious[task] = []
 
@@ -87,7 +86,19 @@ def get_ious(gt_path, pred_path, true_pos_only):
             iou_score = calculate_iou(pred_mask, gt_mask, true_pos_only)
             ious[task].append(iou_score)
 
-        assert len(ious[task]) == len(gt_dict.keys())
+        # if true_pos_only is set to false, we also include cxrs with no gt segmentations but has pred segmentations
+        if not true_pos_only:
+            for cxr_id in sorted(pred_dict.keys()):
+                if cxr_id not in gt_dict:
+                    pred_item = pred_dict[cxr_id][task]
+                    pred_mask = mask.decode(pred_item)
+                    gt_mask = np.zeros(pred_item['size'])
+                    assert gt_mask.shape == pred_mask.shape
+                    iou_score = calculate_iou(pred_mask, gt_mask, true_pos_only)
+                    ious[task].append(iou_score)
+                    cxr_ids.append(cxr_id)
+        else:
+            assert len(ious[task]) == len(gt_dict.keys())
 
     return ious, cxr_ids
 
@@ -136,13 +147,7 @@ def create_map(pkl_path):
     """
     Create saliency map of original img size·
     """
-    class CPU_Unpickler(pickle.Unpickler):
-        def find_class(self, module, name):
-            if module == 'torch.storage' and name == '_load_from_bytes':
-                return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
-            else: return super().find_class(module, name)
-
-    info = CPU_Unpickler(open(pkl_path,'rb')).load()
+    info = pickle.load(open(pkl_path,'rb'))
     saliency_map = info['map']
     img_dims = info['cxr_dims']
     map_resized = F.interpolate(saliency_map, size=(img_dims[1],img_dims[0]), mode='bilinear', align_corners=False)
@@ -226,19 +231,18 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
 
     data_mean = metric_df.mean().round(3).values
     metric_df['img_id'] = cxr_ids
-    metric_df.to_csv(f'{save_dir}/{metric}_results.csv', index=False)
+    metric_df = metric_df.sort_values(by='img_id')
+    metric_df.to_csv(f'{save_dir}/{metric}_results_per_cxr.csv', index=False)
 
     bs_df = bootstrap_metric(metric_df, 1000)
-    bs_df.to_csv(f'{save_dir}/{metric}_bootstrap_results.csv', index=False)
+    bs_df.to_csv(f'{save_dir}/{metric}_bootstrap_results_per_cxr.csv', index=False)
 
     # get confidence intervals
     records = []
     for task in bs_df.columns:
         records.append(create_ci_record(bs_df[task], task))
 
-    summary_df = pd.DataFrame.from_records(records).sort_values(by = 'name')
-    summary_df['bs_mean'] = summary_df['mean']
-    summary_df['mean'] = data_mean
+    summary_df = pd.DataFrame.from_records(records).sort_values(by='name')
     print(summary_df)
     summary_df.to_csv(f'{save_dir}/{metric}_summary_results.csv', index=False)
 
@@ -257,7 +261,7 @@ if __name__ == '__main__':
     parser.add_argument('--true_pos_only', default='True',
                         help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
-                        ground-truth segmentations)')
+                        ground-truth segmentations). If set to false, also include CXRs with predicted segmentation but without ground-truth segmentation')
     parser.add_argument('--save_dir', default='.',
                         help='where to save evaluation results')
     parser.add_argument('--seed', type=int, default=0,
