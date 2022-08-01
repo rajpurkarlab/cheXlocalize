@@ -1,6 +1,7 @@
 """
 When evaluating mIoU on the full dataset, we ensure that the final binary segmentation is consistent with model probability output by applying another layer of thresholding 
-such that the segmentation mask is all zeros if the predicted probability was below a chosen level. The probability threshold is searched on the interval of [0,0.8] with steps of 0.1. 
+such that the segmentation mask is all zeros if the predicted probability was below a chosen level. 
+The probability threshold is searched on the interval of [0,0.8] with steps of 0.1. 
 The exact value is determined per pathology by maximizing the mIoU on the validation set. 
 """
 
@@ -27,7 +28,7 @@ def compute_miou(cutoff, pkl_paths,gt):
     ious = []
 
     for pkl_path in tqdm(pkl_paths):
-        # get gradcam segmentation 
+        # get saliency segmentation 
         info = pickle.load(open(pkl_path,'rb'))
         img_dims = info['cxr_dims']
         map_resized = F.interpolate(info['map'], size=(img_dims[1],img_dims[0]), mode='bilinear', align_corners=False)
@@ -54,10 +55,10 @@ def compute_miou(cutoff, pkl_paths,gt):
         else:
             pred_mask = np.zeros((img_dims[1],img_dims[0]))
 
-        iou = calculate_iou(gradcam_mask,pred_mask)
+        iou = calculate_iou(gradcam_mask,pred_mask, true_pos_only=False)
         ious.append(iou)
 
-    miou = np.nanmean(np.array(ious))
+    miou = round(np.nanmean(np.array(ious)),3)
     return miou
 
 
@@ -67,7 +68,7 @@ def find_threshold(task,gt, cam_dir):
     """
     cam_pkl = sorted(list(Path(cam_dir).rglob(f"*{task}_map.pkl")))
     cutoffs = np.arange(0.1,.9,.1)
-    mious = [compute_miou(cutoff,cam_pkl,gt) for cutoff in cutoffs ]
+    mious = [compute_miou(cutoff,cam_pkl,gt) for cutoff in cutoffs]
     cutoff = cutoffs[mious.index(max(mious))]
     print(f"cutoff: {cutoffs}; iou: {mious}")
     return cutoffs, mious

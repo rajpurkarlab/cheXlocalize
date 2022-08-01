@@ -5,12 +5,12 @@ prob_threshold,mIoU,task
 0.4,0.204,Airspace Opacity
 0.5,0.198,Airspace Opacity
 0.6,0.147,Airspace Opacity
-0.7,0.07200000000000001,Airspace Opacity
-0.8,0.006999999999999999,Airspace Opacity
-0.1,0.08900000000000001,Atelectasis
+0.7,0.072,Airspace Opacity
+0.8,0.007,Airspace Opacity
+0.1,0.089,Atelectasis
 0.2,0.115,Atelectasis
 0.3,0.134,Atelectasis
-0.4,0.12300000000000001,Atelectasis
+0.4,0.123,Atelectasis
 0.5,0.081,Atelectasis
 0.6,0.02,Atelectasis
 0.7,0.008,Atelectasis
@@ -23,7 +23,7 @@ prob_threshold,mIoU,task
 0.6,0.084,Cardiomegaly
 0.7,0.016,Cardiomegaly
 0.8,0.016,Cardiomegaly
-0.1,0.21100000000000002,Consolidation
+0.1,0.211,Consolidation
 0.2,0.081,Consolidation
 0.3,0.0,Consolidation
 0.4,0.0,Consolidation
@@ -33,13 +33,13 @@ prob_threshold,mIoU,task
 0.8,0.0,Consolidation
 0.1,0.12,Edema
 0.2,0.161,Edema
-0.3,0.18899999999999997,Edema
+0.3,0.189,Edema
 0.4,0.218,Edema
 0.5,0.233,Edema
 0.6,0.188,Edema
 0.7,0.136,Edema
 0.8,0.053,Edema
-0.1,0.040999999999999995,Enlarged Cardiomediastinum
+0.1,0.041,Enlarged Cardiomediastinum
 0.2,0.01,Enlarged Cardiomediastinum
 0.3,0.005,Enlarged Cardiomediastinum
 0.4,0.0,Enlarged Cardiomediastinum
@@ -56,12 +56,12 @@ prob_threshold,mIoU,task
 0.7,0.0,Lung Lesion
 0.8,0.0,Lung Lesion
 0.1,0.079,Pleural Effusion
-0.2,0.10300000000000001,Pleural Effusion
-0.3,0.11699999999999999,Pleural Effusion
-0.4,0.12300000000000001,Pleural Effusion
-0.5,0.12300000000000001,Pleural Effusion
+0.2,0.103,Pleural Effusion
+0.3,0.117,Pleural Effusion
+0.4,0.123,Pleural Effusion
+0.5,0.123,Pleural Effusion
 0.6,0.133,Pleural Effusion
-0.7,0.09699999999999999,Pleural Effusion
+0.7,0.097,Pleural Effusion
 0.8,0.068,Pleural Effusion
 0.1,0.035,Pneumothorax
 0.2,0.068,Pneumothorax
@@ -71,11 +71,11 @@ prob_threshold,mIoU,task
 0.6,0.125,Pneumothorax
 0.7,0.085,Pneumothorax
 0.8,0.085,Pneumothorax
-0.1,0.12300000000000001,Support Devices
+0.1,0.123,Support Devices
 0.2,0.147,Support Devices
 0.3,0.16,Support Devices
-0.4,0.16699999999999998,Support Devices
-0.5,0.16399999999999998,Support Devices
+0.4,0.167,Support Devices
+0.5,0.164,Support Devices
 0.6,0.16,Support Devices
-0.7,0.14400000000000002,Support Devices
+0.7,0.144,Support Devices
 0.8,0.114,Support Devices

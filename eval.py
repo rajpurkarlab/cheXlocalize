@@ -48,7 +48,8 @@ def get_ious(gt_path, pred_path, true_pos_only):
         pred_path (str): path to predicted segmentation json file (encoded)
         true_pos_only (bool): if true, run evaluation only on the true positive
                               slice of the dataset (CXRs that contain predicted
-                              and ground-truth segmentations)
+                              and ground-truth segmentations). If set to false, also 
+                              include CXRs with predicted segmentation but without ground-truth segmentation')
 
     Returns:
         ious (dict): dict with 10 keys, one for each pathology (task). Values
