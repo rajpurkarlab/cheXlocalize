@@ -50,10 +50,12 @@ def format_ci(row):
 
 
 def run_features_regression(args):
+    evaluate_hb = eval(args.evaluate_hb)
+
     # read localization performance
     pred_miou_results = pd.read_csv(args.pred_miou_results)
     pred_hitrate_results = pd.read_csv(args.pred_hitrate_results)
-    if args.evaluate_hb:
+    if evaluate_hb:
         hb_miou_results = pd.read_csv(args.hb_miou_results)
         hb_hitrate_results = pd.read_csv(args.hb_hitrate_results)
 
@@ -77,7 +79,7 @@ def run_features_regression(args):
     irrectangularity_df_pos = irrectangularity_df.iloc[pos_idx]
 
     # create regression dataframe 
-    if args.evaluate_hb:
+    if evaluate_hb:
         regression_cols = ['pred_miou', 'miou_diff', 'pred_hitrate', 'hitrate_diff']
     else:
         regression_cols = ['pred_miou', 'pred_hitrate']
@@ -94,8 +96,8 @@ def run_features_regression(args):
                     'area_ratio':area_df_pos[task].values,
                     'elongation': elongation_df_pos[task].values,
                     'irrectangularity': irrectangularity_df_pos[task].values,
-                    'img_id': hb_miou_results['img_id']}
-            if args.evaluate_hb:
+                    'img_id': pred_miou_results['img_id']}
+            if evaluate_hb:
                 data['miou_diff'] =     hb_miou_results[task].values \
                                             - pred_miou_results[task].values
                 data['hitrate_diff'] =  hb_hitrate_results[task].values \
@@ -127,7 +129,7 @@ if __name__ == "__main__":
     parser.add_argument('--pred_hitrate_results', type=str,
                         help='path to csv file with saliency method hit/miss \
                               results for each CXR and each pathology.')
-    parser.add_argument('--evaluate_hb', type=bool, default=False,
+    parser.add_argument('--evaluate_hb', type=str, default='False',
                         help='if true, evaluate human benchmark in addition to \
                               saliency method.')
     parser.add_argument('--hb_miou_results', type=str,
@@ -139,5 +141,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_dir', type=str, default='.',
                         help='where to save regression results')
     args = parser.parse_args()
+    assert args.evaluate_hb == 'True' or args.evaluate_hb == 'False', \
+        "`evaluate_hb` flag must be either `True` or `False`"
 
     run_features_regression(args)

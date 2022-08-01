@@ -89,7 +89,8 @@ def cam_to_segmentation(cam_mask, threshold=np.nan, smoothing=False, k=0):
     return segmentation
 
 
-def pkl_to_mask(pkl_path, threshold=np.nan, smoothing=False, k=0):
+def pkl_to_mask(pkl_path, threshold=np.nan, prob_cutoff=0,
+                smoothing=False, k=0):
     """
     Load pickle file, get saliency map and resize to original image dimension.
     Threshold the heatmap to binary segmentation.
@@ -171,7 +172,7 @@ def heatmap_to_mask(args):
         segmentation = pkl_to_mask(pkl_path,
                                    threshold=best_threshold,
                                    prob_cutoff=prob_cutoff,
-                                   smoothing=args.smoothing,
+                                   smoothing=eval(args.if_smoothing),
                                    k=args.k)
         encoded_mask = encode_segmentation(segmentation)
 
@@ -187,10 +188,10 @@ def heatmap_to_mask(args):
             results[img_id][task] = encoded_mask
 
     # save to json
-    Path(os.path.dirname(output_path)).mkdir(exist_ok=True, parents=True)
-    with open(output_path, 'w') as f:
+    Path(os.path.dirname(args.output_path)).mkdir(exist_ok=True, parents=True)
+    with open(args.output_path, 'w') as f:
         json.dump(results, f)
-    print(f'Segmentation masks (in RLE format) saved to {output_path}')
+    print(f'Segmentation masks (in RLE format) saved to {args.output_path}')
 
 
 if __name__ == '__main__':
@@ -208,7 +209,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_path', type=str,
                         default='./saliency_segmentations.json',
                         help='json file path for saving encoded segmentations')
-    parser.add_argument('--if_smoothing', type=bool, default=False,
+    parser.add_argument('--if_smoothing', type=str, default='False',
                         help='If true, smooth the pixelated heatmaps using box \
                               filtering.')
     parser.add_argument('--k', type=int, default=0,
@@ -217,5 +218,7 @@ if __name__ == '__main__':
                               if_smoothing to True, otherwise no smoothing would \
                               be performed.')
     args = parser.parse_args()
+    assert args.if_smoothing == 'True' or args.if_smoothing == 'False', \
+        "`if_smoothing` flag must be either `True` or `False`"
 
     heatmap_to_mask(args)

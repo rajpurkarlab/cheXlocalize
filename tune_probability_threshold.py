@@ -12,6 +12,7 @@ from pathlib import Path
 import pickle
 from pycocotools import mask
 import torch
+import torch.nn.functional as F
 from tqdm import tqdm
 
 from eval import calculate_iou

@@ -255,7 +255,7 @@ def get_hb_hitrates(gt_path, pred_path):
     return results_df, all_ids
 
 
-def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only, human_benchmark):
+def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only, if_human_benchmark):
     """
 	Generates and saves three csv files:
 	-- `{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and
@@ -271,14 +271,14 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only, human_benchmar
     if metric == 'miou':
         ious, cxr_ids = get_ious(gt_path, pred_path, true_pos_only)
         metric_df = pd.DataFrame.from_dict(ious)
-    elif metric == 'hitrate' and human_benchmark == False:
+    elif metric == 'hitrate' and if_human_benchmark == False:
         metric_df, cxr_ids = get_hitrates(gt_path, pred_path)
-    elif metric == 'hitrate' and human_benchmark == True:
+    elif metric == 'hitrate' and if_human_benchmark == True:
         metric_df, cxr_ids = get_hb_hitrates(gt_path, pred_path)
     else:
         raise ValueError('`metric` must be either `miou` or `hitrate`')
 
-    hb = 'humanbenchmark_' if human_benchmark else ''
+    hb = 'humanbenchmark_' if if_human_benchmark else ''
 
     metric_df['img_id'] = cxr_ids
     metric_df = metric_df.sort_values(by='img_id')
@@ -308,7 +308,7 @@ if __name__ == '__main__':
                         help='json path where predicted segmentations are saved \
                               (if metric = miou) or directory with pickle files \
 							  containing heat maps (if metric = hitrate)')
-    parser.add_argument('--true_pos_only', type=bool, default=True,
+    parser.add_argument('--true_pos_only', type=str, default='True',
                         help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
                         ground-truth segmentations); if false, also include cxrs \
@@ -317,7 +317,7 @@ if __name__ == '__main__':
                         segmentation but without a predicted segmentation.')
     parser.add_argument('--save_dir', default='.',
                         help='where to save evaluation results')
-    parser.add_argument('--human_benchmark', type=bool, default=False,
+    parser.add_argument('--if_human_benchmark', type=str, default='False',
                         help='if true, scripts expects human benchmark inputs')
     parser.add_argument('--seed', type=int, default=0,
                         help='random seed to fix')
@@ -325,8 +325,10 @@ if __name__ == '__main__':
 
     assert args.metric == 'miou' or args.metric == 'hitrate', \
         "`metric` flag must be either `miou` or `hitrate`"
+    assert args.if_human_benchmark == 'True' or args.if_human_benchmark == 'False', \
+        "`if_human_benchmark` flag must be either `True` or `False`"
 
     np.random.seed(args.seed)
 
     evaluate(args.gt_path, args.pred_path, args.save_dir, args.metric,
-             args.true_pos_only, args.human_benchmark)
+             eval(args.true_pos_only), eval(args.if_human_benchmark))
