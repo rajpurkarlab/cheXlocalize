@@ -21,17 +21,17 @@ def format_ci(row):
     def format_stats_sig(p_val):
         """Output *, **, *** based on p-value."""
         stats_sig_level = ''
-        if p_val < 0.001:
+        # perform Bonferroni correction since we did four tests on the same data
+        if p_val < 0.001 / 4:
             stats_sig_level = '***'
-        elif p_val < 0.01:
+        elif p_val < 0.01 / 4:
             stats_sig_level = '**'
-        elif p_val < 0.05:
+        elif p_val < 0.05 / 4:
             stats_sig_level = '*'
         return stats_sig_level
 
     # CI on linear regression coefficients
     p_val = row['coef_pval']
-    p_val *= 4 # to get Bonferroni corrected p-values
     stats_sig_level = format_stats_sig(p_val)
     mean = row['mean']
     upper = row['upper']
@@ -40,7 +40,6 @@ def format_ci(row):
 
     # CI on spearman correlations
     p_val = row['corr_pval']
-    p_val *= 4 # to get Bonferroni corrected p-values
     stats_sig_level = format_stats_sig(p_val)
     mean = row['corr']
     upper = row['corr_upper']

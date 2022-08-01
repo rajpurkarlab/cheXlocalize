@@ -70,7 +70,7 @@ If you'd like to use your own heatmaps/annotations/segmentations, see the releva
 To generate binary segmentations from saliency method heatmaps, run:
 
 ```
-(chexlocalize) > python heatmap_to_segmentation.py --map_dir <map_dir> --threshold_path <threshold_path> --output_path <output_path>
+(chexlocalize) > python heatmap_to_segmentation.py --map_dir <map_dir> --threshold_path <threshold_path> --probability_threshold_path <probability_threshold_path> --output_path <output_path>
 ```
 
 `<map_dir>` is the directory with pickle files containing the heatmaps. The script extracts the heatmaps from the pickle files.
@@ -121,6 +121,8 @@ If using your own saliency maps, please be sure to save them as pickle files usi
 
 `<threshold_path>` is an optional csv file path that you can pass in to use your own thresholds to binarize the heatmaps. As an example, we provide [`./sample/tuning_results.csv`](https://github.com/rajpurkarlab/cheXlocalize/blob/master/sample/tuning_results.csv), which contains the threshold for each pathology that maximizes mIoU on the validation set. When passing in your own csv file, make sure to follow the same formatting as this example csv. By default, no threshold path is passed in, in which case we will apply Otsu's method (an automatic global thresholding algorithm provided by the cv2 package).
 
+`<probability_threshold_path>` is an optional csv file path that you can pass in to reduce false positives segmentation prediction using probability cutoffs. If the predicted model probability was below the cutoff, we generated a segmentation mask of all zeros regardless of thresholding scheme. As an example, we provide [`./sample/probability_tuning_results.csv`](TODO: add link), which contains the threshold for each pathology that maximizes mIoU on the validation set. This is used to reproduce results in Extended Data Figure 4. In practice we recommend that users use `<threshold_path>` to find the best thresholds for localization performance evaluation. 
+
 `<output_path>` is the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details).
 
 To store the binary segmentations efficiently, we use RLE format, and the encoding is implemented using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools). If an image has no saliency segmentations, we store a mask of all zeros.
@@ -142,6 +144,22 @@ To find the thresholds that maximize mIoU for each pathology on the validation s
 `<save_dir>` is the directory to save the csv file that stores the tuned thresholds. Default is current directory.
 
 This script will replicate './sample/tuning_results.csv' when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
+
+#### Make segmentation prediction consistent with model probability prediction
+This part reproduces Extended Data Figure 4 in the paper where we evaluate mIoU localization performance on the full dataset (meaning that in addition to true positives, we also include CXRs with ground-truth segmentation but without predicted segmentation, and CXRs with predicted segmentation but without ground-truth segmentation). We noticed that for many CXRs false positive saliency segmentaions were generated despite that model probability was low. To ensure that the saliency segmentation is consistent with model probability output, we applied a logic such that the segmentation mask is all zeros if the predicted probability was below a chosen level. The exact value is determined per pathology by maximizing the mIoU on the validation set. 
+
+To find the probability threshold for each pathology on the validation set, run:
+
+```
+(chexlocalize) > python tune_probability_threshold.py --map_dir <map_dir> --gt_path <gt_path> --save_dir <save_dir>
+```
+`<map_dir>` is the directory with pickle files containing the heatmaps.
+
+`<gt_path>` is the json file where ground-truth segmentations are saved (encoded).
+
+`<save_dir>` is the directory to save the csv file that stores the tuned thresholds. Default is current directory.
+
+This script will replicate './sample/probability_tuning_results.csv' when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
 
 <a name="ann_to_segm"></a>
 ## Generate segmentations from human annotations
@@ -220,7 +238,7 @@ To run evaluation, use the following command:
 * `--pred_path`: If `metric = miou`, then this should be the path to file where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or `annotation_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`.
 
 **Optional flags**
-* `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations).
+* `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations). If `False`, also include CXRs with a predicted segmentation but without a ground-truth segmentation, and include CXRs with a ground-truth segmentation but without a predicted segmentation.
 * `--save_dir`: Where to save evaluation results. Default is current directory.
 * `--seed`: Default is `0`. Random seed to fix for bootstrapping.
 

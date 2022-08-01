@@ -50,7 +50,7 @@ def run_linear_regression(regression_df, task, y, x):
                'corr_upper': round(upper_r,3),
                'corr': round(corr,3),
                'corr_pval': corr_pval,
-               'n': int(len(regression_df)),
+               'n': int(len(regression_df[regression_df[y].notnull()])),
                'feature': x,
                'task': task}
     return pd.DataFrame([results])
