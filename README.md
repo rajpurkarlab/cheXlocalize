@@ -75,7 +75,7 @@ To generate binary segmentations from saliency method heatmaps, run:
 ```
 
 **Required flags**
-* `--<map_dir>`: the directory with pickle files containing the heatmaps. The script extracts the heatmaps from the pickle files.
+* `--map_dir`: the directory with pickle files containing the heatmaps. The script extracts the heatmaps from the pickle files.
 
 If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`. Each CXR has a pickle file associated with each of the ten pathologies, so that each pickle file contains information for a single CXR and pathology in the following format:
 
@@ -123,8 +123,8 @@ If using your own saliency maps, please be sure to save them as pickle files usi
 
 **Optional flags**
 * `--threshold_path`: an optional csv file path that you can pass in to use your own thresholds to binarize the heatmaps. As an example, we provide [`./sample/tuning_results.csv`](https://github.com/rajpurkarlab/cheXlocalize/blob/master/sample/tuning_results.csv), which contains the threshold for each pathology that maximizes mIoU on the validation set. When passing in your own csv file, make sure to follow the same formatting as this example csv. By default, no threshold path is passed in, in which case we will apply Otsu's method (an automatic global thresholding algorithm provided by the cv2 package).
-* `--probability_threshold_path`: an optional csv file path that you can pass in to reduce false positives segmentation prediction using probability cutoffs. If the predicted model probability is below the cutoff, we generate a segmentation mask of all zeros regardless of thresholding scheme. See [_Fine-tune probability thresholds](#prob_threshold) for more context.
-* `--<output_path>`: the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details). Default is `./saliency_segmentations.json`.
+* `--probability_threshold_path`: an optional csv file path that you can pass in to reduce false positive segmentation prediction using probability cutoffs. If the predicted model probability is below the cutoff, we generate a segmentation mask of all zeros regardless of thresholding scheme. As an example, we provide [`./sample/probability_tuning_results.csv`](https://github.com/rajpurkarlab/cheXlocalize/blob/master/sample/probability_tuning_results.csv). When passing in your own csv file, make sure to follow the same formatting as this example csv. See [_Fine-tune probability thresholds_](#prob_threshold) for more context.
+* `--output_path`: the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details). Default is `./saliency_segmentations.json`.
 * `--if_smoothing`: Set this flag to `True` to smooth the pixelated heatmaps using box filtering. Default is `False`.
 * `--k`: the kernel size used for box filtering (`int`). Default is 0. The user-defined `k` must be >= 0. If you set `k` as any number > 0, make sure to set `if_smoothing` to `True`, otherwise no smoothing would be performed.
 
@@ -151,7 +151,9 @@ This script will replicate `./sample/tuning_results.csv` when you use the CheXlo
 
 <a name="prob_threshold"></a>
 ### Fine-tune probability thresholds
-To create the csv file to use with the above flag `probability_threshold_path`, run:
+We noticed that for many CXRs false positive saliency segmentations were generated even though model probability was low. To ensure that the saliency segmentation is consistent with model probability output, we apply a logic such that the segmentation mask is all zeros if the predicted probability was below a chosen cutoff. To choose these cutoffs for each pathology, we maximize the mIoU on the validation set.
+
+To create the csv file with these cutoffs (and that should be used with the flag `--probability_threshold_path` for `heatmap_to_segmentation.py`), run:
 
 ```
 (chexlocalize) > python tune_probability_threshold.py [FLAGS]
@@ -164,13 +166,9 @@ To create the csv file to use with the above flag `probability_threshold_path`, 
 **Optional flags**
 * `--save_dir`: the directory to save the csv file that stores the tuned thresholds. Default is current directory.
 
-We noticed that for many CXRs false positive saliency segmentaions were generated even though model probability was low. To ensure that the saliency segmentation is consistent with model probability output, we apply a logic such that the segmentation mask is all zeros if the predicted probability was below a chosen cutoff. To choose these cutoff for each pathology, we maximize the mIoU on the validation set.
+In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4. In practice, we recommend that users use `<threshold_path>` to find the best thresholds for localization performance evaluation.
 
-In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Extended Data Fig. 4. In practice, we recommend that users use `<threshold_path>` to find the best thresholds for localization performance evaluation.
-
-TODO: specify the format needed for probability threshold.
-
-This script will replicate `./sample/probability_tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour. (TODO: CHECK THAT THIS IS RIGHT??)
+This script will replicate `./sample/probability_tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
 
 <a name="ann_to_segm"></a>
 ## Generate segmentations from human annotations
@@ -178,12 +176,11 @@ This script will replicate `./sample/probability_tuning_results.csv` when you us
 To generate binary segmentations from raw human annotations, run:
 
 ```
-(chexlocalize) > python annotation_to_segmentation.py --ann_path <ann_path> --output_path <output_path>
+(chexlocalize) > python annotation_to_segmentation.py [FLAGS]
 ```
 
-`<ann_path>` is the json file path with raw human annotations.
-
-If you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_annotations_val.json`. Each key of the json file is a single CXR id with its data formatted as follows:
+**Required flags**
+* `--ann_path`: the json file path with raw human annotations. If you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_annotations_val.json`. Each key of the json file is a single CXR id with its data formatted as follows:
 
 ```
 {
@@ -221,7 +218,8 @@ This input json should include only those CXRs with at least one positive ground
 
 If using your own human annotations, please be sure to save them in a json using the above formatting.
 
-`<output_path>` is the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details).
+**Optional flags**
+* `--output_path`: the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details). Default is `./human_segmentations.json`.
 
 Running this script on the validation set heatmaps from the CheXlocalize dataset should take about 5 minutes.
 
@@ -253,10 +251,10 @@ To run evaluation, use the following command:
 **Optional flags**
 * `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations). If `False`, also include CXRs with a predicted segmentation but without a ground-truth segmentation, and include CXRs with a ground-truth segmentation but without a predicted segmentation.
 * `--save_dir`: Where to save evaluation results. Default is current directory.
-* `--human_benchmark`: If `True`, run evaluation on human benchmark performance. Default is set to `False`. This is especially important when evaluating hit rate performance, since the most representative point input for saliency method is formatted differently than the most representative point input for human benchmark.
+* `--if_human_benchmark`: If `True`, run evaluation on human benchmark performance. Default is set to `False`. This is especially important when evaluating hit rate performance, since the most representative point input for saliency method is formatted differently than the most representative point input for human benchmark.
 * `--seed`: Default is `0`. Random seed to fix for bootstrapping.
 
-Both `pred_path` (if `metric = miou`) and `gt_path` must be json files where each key is a single CXR id with its data formatted as follows:
+If `metric = miou`, both `pred_path` and `gt_path` must be json files where each key is a single CXR id with its data formatted as follows:
 
 ```
 {
@@ -302,6 +300,8 @@ To compute the four pathology features, run:
 
 Note that we use the ground-truth annotations to extract the number of instances, and we use the ground-truth segmentation masks to calculate area, elongation and rectangularity. We chose to extract number of instances from annotations because sometimes radiologists draw two instances for a pathology that are overlapping; in this case, the number of annotations would be 2, but the number of segmentations would be 1.
 
+Running this script on the validation set annotations and segmentations from the CheXlocalize dataset should take about 5 minutes.
+
 <a name="regression_pathology"></a>
 ## Run regressions on pathology features
 We provide a script to run a simple linear regression with the evaluation metric (IoU or hit/miss) as the dependent variable (to understand the relationship between the geometric features of a pathology and saliency method localization performance). Each regression uses one of the above four geometric features as a single independent variable.
@@ -317,8 +317,8 @@ We provide a script to run a simple linear regression with the evaluation metric
 
 **Optional flags**
 * `--evalute_hb`: Default is `False`. If true, evaluate human benchmark in addition to saliency method. If `True`, the flags `hb_miou_results` and `hb_hitrate_results` (below) are also required. If `True`, additional regressions will be run using the difference between the evaluation metrics of the saliency method pipeline and the human benchmark as the dependent variable (to understand the relationship between the geometric features of a pathology and the gap in localization performance between the saliency method pipeline and the human benchmark).
-* `--hb_miou_results`: Path to csv file with human benchmark IoU results for each CXR and each pathology. This is the output of `eval.py` called `miou_results_per_cxr.csv`.
-* `--hb_hitrate_results`: Path to csv file with human benchmark hit/miss results for each CXR and each pathology. TODO: This is the output of `eval.py` called `hitrate_results_per_cxr.csv`.
+* `--hb_miou_results`: Path to csv file with human benchmark IoU results for each CXR and each pathology. This is the output of `eval.py` called `miou_humanbenchmark_results_per_cxr.csv`.
+* `--hb_hitrate_results`: Path to csv file with human benchmark hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitrate_humanbenchmark_results_per_cxr.csv`.
 * `--save_dir`: Where to save regression results. Default is current directory. If `evaluate_hb` is `True`, four files will be saved: `regression_pred_miou.csv`, `regression_pred_hitrate.csv`, `regression_miou_diff.csv`, `regression_hitrate_diff.csv`. If `evaluate_hb` is `False`, only two files will be saved: `regression_pred_miou.csv`, `regression_pred_hitrate.csv`.
 
 In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), only the true positive slice was included in each regression (see Table 2). Each feature is normalized using min-max normalization and the regression coefficient can be interpreted as the effect of that geometric feature on the evaluation metric at hand. The regression results report the 95% confidence interval and the Bonferroni corrected p-values. For confidence intervals and p-values, we use the standard calculation for linear models.

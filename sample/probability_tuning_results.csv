@@ -1,0 +1,91 @@
+prob_threshold,mIoU,task
+0.0,0.123,Airspace Opacity
+0.1,0.134,Airspace Opacity
+0.2,0.162,Airspace Opacity
+0.3,0.184,Airspace Opacity
+0.4,0.204,Airspace Opacity
+0.5,0.198,Airspace Opacity
+0.6,0.147,Airspace Opacity
+0.7,0.072,Airspace Opacity
+0.8,0.007,Airspace Opacity
+0.0,0.067,Atelectasis
+0.1,0.089,Atelectasis
+0.2,0.115,Atelectasis
+0.3,0.134,Atelectasis
+0.4,0.123,Atelectasis
+0.5,0.081,Atelectasis
+0.6,0.02,Atelectasis
+0.7,0.008,Atelectasis
+0.8,0.0,Atelectasis
+0.0,0.132,Cardiomegaly
+0.1,0.223,Cardiomegaly
+0.2,0.203,Cardiomegaly
+0.3,0.158,Cardiomegaly
+0.4,0.134,Cardiomegaly
+0.5,0.091,Cardiomegaly
+0.6,0.084,Cardiomegaly
+0.7,0.016,Cardiomegaly
+0.8,0.016,Cardiomegaly
+0.0,0.054,Consolidation
+0.1,0.211,Consolidation
+0.2,0.081,Consolidation
+0.3,0.0,Consolidation
+0.4,0.0,Consolidation
+0.5,0.0,Consolidation
+0.6,0.0,Consolidation
+0.7,0.0,Consolidation
+0.8,0.0,Consolidation
+0.0,0.063,Edema
+0.1,0.12,Edema
+0.2,0.161,Edema
+0.3,0.189,Edema
+0.4,0.218,Edema
+0.5,0.233,Edema
+0.6,0.188,Edema
+0.7,0.136,Edema
+0.8,0.053,Edema
+0.0,0.191,Enlarged Cardiomediastinum
+0.1,0.041,Enlarged Cardiomediastinum
+0.2,0.01,Enlarged Cardiomediastinum
+0.3,0.005,Enlarged Cardiomediastinum
+0.4,0.0,Enlarged Cardiomediastinum
+0.5,0.0,Enlarged Cardiomediastinum
+0.6,0.0,Enlarged Cardiomediastinum
+0.7,0.0,Enlarged Cardiomediastinum
+0.8,0.0,Enlarged Cardiomediastinum
+0.0,0.001,Lung Lesion
+0.1,0.0,Lung Lesion
+0.2,0.0,Lung Lesion
+0.3,0.0,Lung Lesion
+0.4,0.0,Lung Lesion
+0.5,0.0,Lung Lesion
+0.6,0.0,Lung Lesion
+0.7,0.0,Lung Lesion
+0.8,0.0,Lung Lesion
+0.0,0.046,Pleural Effusion
+0.1,0.079,Pleural Effusion
+0.2,0.103,Pleural Effusion
+0.3,0.117,Pleural Effusion
+0.4,0.123,Pleural Effusion
+0.5,0.123,Pleural Effusion
+0.6,0.133,Pleural Effusion
+0.7,0.097,Pleural Effusion
+0.8,0.068,Pleural Effusion
+0.0,0.008,Pneumothorax
+0.1,0.035,Pneumothorax
+0.2,0.068,Pneumothorax
+0.3,0.066,Pneumothorax
+0.4,0.08,Pneumothorax
+0.5,0.102,Pneumothorax
+0.6,0.125,Pneumothorax
+0.7,0.085,Pneumothorax
+0.8,0.085,Pneumothorax
+0.0,0.087,Support Devices
+0.1,0.123,Support Devices
+0.2,0.147,Support Devices
+0.3,0.16,Support Devices
+0.4,0.167,Support Devices
+0.5,0.164,Support Devices
+0.6,0.16,Support Devices
+0.7,0.144,Support Devices
+0.8,0.114,Support Devices
