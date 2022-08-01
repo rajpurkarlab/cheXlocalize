@@ -125,8 +125,8 @@ If using your own saliency maps, please be sure to save them as pickle files usi
 * `--threshold_path`: an optional csv file path that you can pass in to use your own thresholds to binarize the heatmaps. As an example, we provide [`./sample/tuning_results.csv`](https://github.com/rajpurkarlab/cheXlocalize/blob/master/sample/tuning_results.csv), which contains the threshold for each pathology that maximizes mIoU on the validation set. When passing in your own csv file, make sure to follow the same formatting as this example csv. By default, no threshold path is passed in, in which case we will apply Otsu's method (an automatic global thresholding algorithm provided by the cv2 package).
 * `--probability_threshold_path`: an optional csv file path that you can pass in to reduce false positives segmentation prediction using probability cutoffs. If the predicted model probability is below the cutoff, we generate a segmentation mask of all zeros regardless of thresholding scheme. See [_Fine-tune probability thresholds](#prob_threshold) for more context.
 * `--<output_path>`: the json file path used for saving the encoded segmentation masks. The json file is formatted such that it can be used as input to `eval.py` (see [_Evaluate localization performance_](#eval) for formatting details). Default is `./saliency_segmentations.json`.
-* `--if_smoothing`: TODO
-* `--k`: TODO
+* `--if_smoothing`: Set this flag to `True` to smooth the pixelated heatmaps using box filtering. Default is `False`.
+* `--k`: the kernel size used for box filtering (`int`). Default is 0. The user-defined `k` must be >= 0. If you set `k` as any number > 0, make sure to set `if_smoothing` to `True`, otherwise no smoothing would be performed.
 
 To store the binary segmentations efficiently, we use RLE format, and the encoding is implemented using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools). If an image has no saliency segmentations, we store a mask of all zeros.
 
@@ -246,11 +246,14 @@ To run evaluation, use the following command:
 **Required flags**
 * `--metric`: options are `miou` or `hitrate`
 * `--gt_path`: Path to file where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_segmentations_val.json`.
-* `--pred_path`: If `metric = miou`, then this should be the path to file where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or `annotation_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`. If `metric = hitrate`, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`.
+* `--pred_path`:
+	* If `metric = miou`: this should be the path to file where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or `annotation_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`.
+	* If `metric = hitrate`: when evaluating saliency methods, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`. However, when evaluating human benchmark annotations, then this should be a json file that holds the human annotations for most representative points. TODO: say what format it should be in and say that we'll be releasing these after the competition.
 
 **Optional flags**
 * `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations). If `False`, also include CXRs with a predicted segmentation but without a ground-truth segmentation, and include CXRs with a ground-truth segmentation but without a predicted segmentation.
 * `--save_dir`: Where to save evaluation results. Default is current directory.
+* `--human_benchmark`: If `True`, run evaluation on human benchmark performance. Default is set to `False`. This is especially important when evaluating hit rate performance, since the most representative point input for saliency method is formatted differently than the most representative point input for human benchmark.
 * `--seed`: Default is `0`. Random seed to fix for bootstrapping.
 
 Both `pred_path` (if `metric = miou`) and `gt_path` must be json files where each key is a single CXR id with its data formatted as follows:

@@ -50,7 +50,9 @@ def get_ious(gt_path, pred_path, true_pos_only):
                               slice of the dataset (CXRs that contain predicted
                               and ground-truth segmentations); if false, also
                               include CXRs with a predicted segmentation but
-                              without a ground-truth segmentation
+                              without a ground-truth segmentation, and include
+                              CXRs with a ground-truth segmentation but without
+                              a predicted segmentation.
 
     Returns:
         ious (dict): dict with 10 keys, one for each pathology (task). Values
@@ -158,7 +160,7 @@ def create_map(pkl_path):
     return saliency_map, img_dims
 
 
-def get_hit_rates(gt_path, pred_path):
+def get_hitrates(gt_path, pred_path):
     """
 	Args:
         gt_path (str): directory where ground-truth segmentations are saved (encoded)
@@ -209,11 +211,51 @@ def get_hit_rates(gt_path, pred_path):
             results[img_id][task] = np.nan
 
     all_ids = sorted(gt_dict.keys())
+    results_df = pd.DataFrame.from_dict(results, orient='index')
+    return results_df, all_ids
 
-    return results, all_ids
+
+def get_hb_hitrates(gt_path, pred_path):
+    """
+	Args:
+        gt_path (str): directory where ground-truth segmentations are saved (encoded)
+        pred_path (str): json file with human annotations for most representative point
+    """
+    with open(pred_path) as f:
+        hb_salient_pts = json.load(f)
+    with open(gt_path) as f:
+        gt_dict = json.load(f)
+
+    # evaluate hit
+    results = {}
+    all_ids = sorted(gt_dict.keys())
+    for task in sorted(LOCALIZATION_TASKS):
+        print(f'Evaluating {task}')
+        results[task] = []
+        for img_id in all_ids:
+            hit = np.nan
+            gt_item = gt_dict[img_id][task]
+            gt_mask = mask.decode(gt_item)
+
+            if np.sum(gt_mask) !=0:
+                if img_id in hb_salient_pts and task in hb_salient_pts[img_id]:
+                    salient_pts = hb_salient_pts[img_id][task]
+                    hit = 0
+                    for pt in salient_pts:
+                        if gt_mask[int(pt[1]), int(pt[0])]:
+                            hit = 1
+                else:
+                    hit = 0
+
+            results[task].append(hit)
+
+    results['cxr_id'] = all_ids
+    results_df = pd.DataFrame.from_dict(results)
+    results_df = results_df.set_index('cxr_id')
+    return results_df, all_ids
 
 
-def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
+def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only, human_benchmark):
     """
 	Generates and saves three csv files:
 	-- `{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and
@@ -229,18 +271,21 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     if metric == 'miou':
         ious, cxr_ids = get_ious(gt_path, pred_path, true_pos_only)
         metric_df = pd.DataFrame.from_dict(ious)
-    elif metric == 'hitrate':
-        hit_rates, cxr_ids = get_hit_rates(gt_path, pred_path)
-        metric_df = pd.DataFrame.from_dict(hit_rates, orient='index')
+    elif metric == 'hitrate' and human_benchmark == False:
+        metric_df, cxr_ids = get_hitrates(gt_path, pred_path)
+    elif metric == 'hitrate' and human_benchmark == True:
+        metric_df, cxr_ids = get_hb_hitrates(gt_path, pred_path)
     else:
         raise ValueError('`metric` must be either `miou` or `hitrate`')
 
+    hb = 'humanbenchmark_' if human_benchmark else ''
+
     metric_df['img_id'] = cxr_ids
     metric_df = metric_df.sort_values(by='img_id')
-    metric_df.to_csv(f'{save_dir}/{metric}_results_per_cxr.csv', index=False)
+    metric_df.to_csv(f'{save_dir}/{metric}_{hb}results_per_cxr.csv', index=False)
 
     bs_df = bootstrap_metric(metric_df, 1000)
-    bs_df.to_csv(f'{save_dir}/{metric}_bootstrap_results_per_cxr.csv', index=False)
+    bs_df.to_csv(f'{save_dir}/{metric}_{hb}bootstrap_results_per_cxr.csv', index=False)
 
     # get confidence intervals
     records = []
@@ -263,14 +308,17 @@ if __name__ == '__main__':
                         help='json path where predicted segmentations are saved \
                               (if metric = miou) or directory with pickle files \
 							  containing heat maps (if metric = hitrate)')
-    parser.add_argument('--true_pos_only', default='True',
+    parser.add_argument('--true_pos_only', type=bool, default=True,
                         help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
                         ground-truth segmentations); if false, also include cxrs \
                         with a predicted segmentation but without a ground-truth \
-                        segmentation.')
+                        segmentation, and include cxrs with a ground-truth\
+                        segmentation but without a predicted segmentation.')
     parser.add_argument('--save_dir', default='.',
                         help='where to save evaluation results')
+    parser.add_argument('--human_benchmark', type=bool, default=False,
+                        help='if true, scripts expects human benchmark inputs')
     parser.add_argument('--seed', type=int, default=0,
                         help='random seed to fix')
     args = parser.parse_args()
@@ -281,4 +329,4 @@ if __name__ == '__main__':
     np.random.seed(args.seed)
 
     evaluate(args.gt_path, args.pred_path, args.save_dir, args.metric,
-             eval(args.true_pos_only))
+             args.true_pos_only, args.human_benchmark)

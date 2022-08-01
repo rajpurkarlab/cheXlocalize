@@ -34,27 +34,23 @@ def compute_miou(cutoff, pkl_paths,gt):
         else:
             pred_prob = info['prob']
 
-        # TODO: don't call these gradcam?
         if pred_prob > cutoff:
             segm = cam_to_segmentation(map_resized)
-            gradcam_mask = np.array(segm)
+            pred_mask = np.array(segm)
         else:
-            gradcam_mask = np.zeros((img_dims[1],img_dims[0]))
+            pred_mask = np.zeros((img_dims[1],img_dims[0]))
 
         # get gt segmentation
         path = str(pkl_path).split('/')
         task = path[-1].split('_')[-2]
         img_id = '_'.join(path[-1].split('_')[:-2])
-
-        # TODO: don't call these pred_mask?
         if img_id in gt:
-            pred_item = gt[img_id][task]
-            pred_mask = mask.decode(pred_item)
+            gt_item = gt[img_id][task]
+            gt_mask = mask.decode(gt_item)
         else:
-            pred_mask = np.zeros((img_dims[1],img_dims[0]))
+            gt_mask = np.zeros((img_dims[1],img_dims[0]))
 
-        # TODO: I know that true_pos_only=False when we're replicating Extended Data Fig. 4, but shouldn't this be a flag for the user to decide?
-        iou = calculate_iou(gradcam_mask, pred_mask, true_pos_only=False)
+        iou = calculate_iou(pred_mask, gt_mask, true_pos_only=False)
         ious.append(iou)
 
     miou = round(np.nanmean(np.array(ious)), 3)

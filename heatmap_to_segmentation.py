@@ -35,7 +35,10 @@ def cam_to_segmentation(cam_mask, threshold=np.nan, smoothing=False, k=0):
         cam_mask (torch.Tensor): heat map in the original image size (H x W).
             Will squeeze the tensor if there are more than two dimensions.
         threshold (np.float64): threshold to use
-        TODO: add args for smoothing and k
+        smoothing (bool): if true, smooth the pixelated heatmaps using box filtering
+        k (int): size of kernel used for box filter smoothing (int); k must be
+                 >= 0; if k is > 0, make sure to set if_smoothing to True,
+                 otherwise no smoothing would be performed.
 
     Returns:
         segmentation (np.ndarray): binary segmentation output
@@ -206,9 +209,13 @@ if __name__ == '__main__':
                         default='./saliency_segmentations.json',
                         help='json file path for saving encoded segmentations')
     parser.add_argument('--if_smoothing', type=bool, default=False,
-                        help='If True, apply smoothing to heatmap')
+                        help='If true, smooth the pixelated heatmaps using box \
+                              filtering.')
     parser.add_argument('--k', type=int, default=0,
-                        help='size of kernel used for box filter smoothing')
+                        help='size of kernel used for box filter smoothing (int); \
+                              k must be >= 0; if k is > 0, make sure to set \
+                              if_smoothing to True, otherwise no smoothing would \
+                              be performed.')
     args = parser.parse_args()
 
     heatmap_to_mask(args)
