@@ -31,7 +31,7 @@ def calculate_iou(pred_mask, gt_mask, true_pos_only):
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
     else:
-        if np.sum(gt_mask) == 0:
+        if np.sum(union) == 0:
             iou_score = np.nan
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
@@ -48,7 +48,9 @@ def get_ious(gt_path, pred_path, true_pos_only):
         pred_path (str): path to predicted segmentation json file (encoded)
         true_pos_only (bool): if true, run evaluation only on the true positive
                               slice of the dataset (CXRs that contain predicted
-                              and ground-truth segmentations)
+                              and ground-truth segmentations); if false, also
+                              include CXRs with a predicted segmentation but
+                              without a ground-truth segmentation
 
     Returns:
         ious (dict): dict with 10 keys, one for each pathology (task). Values
@@ -62,10 +64,10 @@ def get_ious(gt_path, pred_path, true_pos_only):
         pred_dict = json.load(f)
 
     ious = {}
-    cxr_ids = sorted(gt_dict.keys())
     tasks = sorted(LOCALIZATION_TASKS)
 
     for task in tasks:
+        cxr_ids = sorted(gt_dict.keys())
         print(f'Evaluating {task}')
         ious[task] = []
 
@@ -86,7 +88,20 @@ def get_ious(gt_path, pred_path, true_pos_only):
             iou_score = calculate_iou(pred_mask, gt_mask, true_pos_only)
             ious[task].append(iou_score)
 
-        assert len(ious[task]) == len(gt_dict.keys())
+        # if true_pos_only is false, include cxrs that do not have ground-truth
+        # segmentations but that have predicted segmentations
+        if not true_pos_only:
+            for cxr_id in sorted(pred_dict.keys()):
+                if cxr_id not in gt_dict:
+                    pred_item = pred_dict[cxr_id][task]
+                    pred_mask = mask.decode(pred_item)
+                    gt_mask = np.zeros(pred_item['size'])
+                    assert gt_mask.shape == pred_mask.shape
+                    iou_score = calculate_iou(pred_mask, gt_mask, true_pos_only)
+                    ious[task].append(iou_score)
+                    cxr_ids.append(cxr_id)
+        else:
+            assert len(ious[task]) == len(gt_dict.keys())
 
     return ious, cxr_ids
 
@@ -201,9 +216,12 @@ def get_hit_rates(gt_path, pred_path):
 def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     """
 	Generates and saves three csv files:
-	-- `{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and each pathology.
-	-- `{miou/hitrate}_bootstrap_results.csv`: 1000 bootstrap samples of mIoU or hit rate for each pathology.
-	-- `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
+	-- `{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and
+                                     each pathology.
+	-- `{miou/hitrate}_bootstrap_results.csv`: 1000 bootstrap samples of mIoU
+                                               or hit rate for each pathology.
+	-- `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap
+                                             confidence intervals for each pathology.
     """
     # create save_dir if it does not already exist
     Path(save_dir).mkdir(exist_ok=True, parents=True)
@@ -218,6 +236,7 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
         raise ValueError('`metric` must be either `miou` or `hitrate`')
 
     metric_df['img_id'] = cxr_ids
+    metric_df = metric_df.sort_values(by='img_id')
     metric_df.to_csv(f'{save_dir}/{metric}_results_per_cxr.csv', index=False)
 
     bs_df = bootstrap_metric(metric_df, 1000)
@@ -228,7 +247,7 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     for task in bs_df.columns:
         records.append(create_ci_record(bs_df[task], task))
 
-    summary_df = pd.DataFrame.from_records(records)
+    summary_df = pd.DataFrame.from_records(records).sort_values(by='name')
     print(summary_df)
     summary_df.to_csv(f'{save_dir}/{metric}_summary_results.csv', index=False)
 
@@ -247,7 +266,9 @@ if __name__ == '__main__':
     parser.add_argument('--true_pos_only', default='True',
                         help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
-                        ground-truth segmentations)')
+                        ground-truth segmentations); if false, also include cxrs \
+                        with a predicted segmentation but without a ground-truth \
+                        segmentation.')
     parser.add_argument('--save_dir', default='.',
                         help='where to save evaluation results')
     parser.add_argument('--seed', type=int, default=0,
