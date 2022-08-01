@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from utils import *
 from pycocotools import mask
-from eval_full_dataset import calculate_iou
+from eval import calculate_iou
 from heatmap_to_segmentation import *
 from eval_constants import LOCALIZATION_TASKS
 from tqdm import tqdm
@@ -67,7 +67,7 @@ def find_threshold(task,gt, cam_dir):
     For a given task, find the probability threshold with max miou (on validation)
     """
     cam_pkl = sorted(list(Path(cam_dir).rglob(f"*{task}_map.pkl")))
-    cutoffs = np.arange(0.1,.9,.1)
+    cutoffs = np.arange(0,.9,.1)
     mious = [compute_miou(cutoff,cam_pkl,gt) for cutoff in cutoffs]
     cutoff = cutoffs[mious.index(max(mious))]
     print(f"cutoff: {cutoffs}; iou: {mious}")
