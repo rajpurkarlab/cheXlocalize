@@ -145,7 +145,7 @@ To find the thresholds that maximize mIoU for each pathology on the validation s
 
 This script will replicate './sample/tuning_results.csv' when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
 
-### Make segmentation prediction consistent with model probability prediction
+#### Make segmentation prediction consistent with model probability prediction
 This part reproduces Extended Data Figure 4 in the paper where we evaluate mIoU localization performance on the full dataset (meaning that in addition to true positives, we also include CXRs with ground-truth segmentation but without predicted segmentation, and CXRs with predicted segmentation but without ground-truth segmentation). We noticed that for many CXRs false positive saliency segmentaions were generated despite that model probability was low. To ensure that the saliency segmentation is consistent with model probability output, we applied a logic such that the segmentation mask is all zeros if the predicted probability was below a chosen level. The exact value is determined per pathology by maximizing the mIoU on the validation set. 
 
 To find the probability threshold for each pathology on the validation set, run:
