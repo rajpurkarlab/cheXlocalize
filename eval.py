@@ -230,7 +230,6 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     else:
         raise ValueError('`metric` must be either `miou` or `hitrate`')
 
-    data_mean = metric_df.mean().round(3).values
     metric_df['img_id'] = cxr_ids
     metric_df = metric_df.sort_values(by='img_id')
     metric_df.to_csv(f'{save_dir}/{metric}_results_per_cxr.csv', index=False)
