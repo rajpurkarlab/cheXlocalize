@@ -21,19 +21,17 @@ def format_ci(row):
     def format_stats_sig(p_val):
         """Output *, **, *** based on p-value."""
         stats_sig_level = ''
-        if p_val < 0.001:
+        # Perform bonferroni correction since we did four tests on the same data
+        if p_val < 0.001 / 4:
             stats_sig_level = '***'
-        elif p_val < 0.01:
+        elif p_val < 0.01 / 4:
             stats_sig_level = '**'
-        elif p_val < 0.05:
+        elif p_val < 0.05 / 4:
             stats_sig_level = '*'
         return stats_sig_level
 
     # CI on linear regression coefficients
     p_val = row['coef_pval']
-    #TODO: when does feature = prob, and why *4?
-    if row['feature'] != 'prob':
-        p_val *= 4
     stats_sig_level = format_stats_sig(p_val)
     mean = row['mean']
     upper = row['upper']
