@@ -1,7 +1,7 @@
 """
 When evaluating mIoU on the full dataset, we ensure that the final binary segmentation is consistent with model probability output by applying another layer of thresholding 
 such that the segmentation mask is all zeros if the predicted probability was below a chosen level. 
-The probability threshold is searched on the interval of [0,0.8] with steps of 0.1. 
+The probability threshold is searched on the interval of [0,0.9] with steps of 0.1. 
 The exact value is determined per pathology by maximizing the mIoU on the validation set. 
 """
 
