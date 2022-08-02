@@ -307,7 +307,11 @@ if __name__ == '__main__':
     parser.add_argument('--pred_path', type=str,
                         help='json path where predicted segmentations are saved \
                               (if metric = iou) or directory with pickle files \
-							  containing heat maps (if metric = hitmiss)')
+							  containing heat maps (if metric = hitmiss and \
+                              if_human_benchmark = false) or json path with \
+                              human annotations for most representative points \
+                              (if metric = hitmiss and if_human_benchmark = \
+                              true)')
     parser.add_argument('--true_pos_only', type=str, default='True',
                         help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
