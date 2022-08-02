@@ -166,7 +166,7 @@ To create the csv file with these cutoffs (and that should be used with the flag
 **Optional flags**
 * `--save_dir`: the directory to save the csv file that stores the tuned thresholds. Default is current directory.
 
-In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4. In practice, we recommend that users use `<threshold_path>` to find the best thresholds for localization performance evaluation.
+In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4 because when evaluating localization performance using the full dataset, we found that many false postive saliency segmentations were generated even though model probability was low. In practice when evaluation only uses the true positve slice of the dataset, we recommend that users use `<threshold_path>` to find the best thresholds because in this scenario we are not accounting for false positives. 
 
 This script will replicate `./sample/probability_tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
 
