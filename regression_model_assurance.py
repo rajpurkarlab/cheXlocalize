@@ -10,7 +10,7 @@ import pickle
 import torch
 
 from eval_constants import CHEXPERT_TASKS, LOCALIZATION_TASKS
-from utils import format_ci, run_linear_regression
+from utils import format_ci, parse_pkl_filename, run_linear_regression
 
 
 def get_model_probability(map_dir):
@@ -18,31 +18,28 @@ def get_model_probability(map_dir):
     Extract model's predicted probability per cxr and per pathology
     """
     prob_dict = {}
-    cxr_ids = []
+    img_ids = []
     for task in sorted(LOCALIZATION_TASKS):
         print(f'Extracting model probability for {task}')
         probs = []
         pkl_paths = sorted(list(Path(map_dir).rglob(f"*{task}_map.pkl")))
         for pkl_path in pkl_paths:
-            # get cxr id
-            path = str(pkl_path).split('/')
-            task = path[-1].split('_')[-2]
-            cxr_id = '_'.join(path[-1].split('_')[:-2])
             # get model probability
+            task, img_id = parse_pkl_filename(pkl_path)
             info = pickle.load(open(pkl_path,'rb'))
             if torch.is_tensor(info['prob']) and info['prob'].size()[0] == 14:
                 prob_idx = CHEXPERT_TASKS.index(info['task'])
                 pred_prob = info['prob'][prob_idx]
             else:
                 pred_prob = info['prob']
-            
+
             probs.append(pred_prob)
-            if cxr_id not in cxr_ids:
-                cxr_ids.append(cxr_id)
+            if img_id not in img_ids:
+                img_ids.append(img_id)
         prob_dict[task] = probs
-    
+
     prob_df = pd.DataFrame.from_dict(prob_dict)
-    prob_df['img_id'] = sorted(cxr_ids)
+    prob_df['img_id'] = sorted(img_ids)
     return prob_df
 
 
@@ -52,15 +49,18 @@ def run_model_assurance_regression(args):
     model_probs_df = get_model_probability(args.map_dir)
     y = args.metric
 
+    # align localization perf metrics and probabilities
+    ids = pred_results['img_id'].tolist()
+    prob_results = model_probs_df[model_probs_df['img_id'].isin(ids)]
+
     coef_summary = pd.DataFrame(columns = ["lower", "mean", "upper",
                         "coef_pval","corr_lower", "corr","corr_upper",
                         "corr_pval", "feature", "task"])
     overall_regression = pd.DataFrame()
+
     for task in sorted(LOCALIZATION_TASKS):
         df = pd.DataFrame()
-        # align localization perf metrics and probabilities
-        ids = pred_results['img_id'].tolist()
-        prob_results = model_probs_df[model_probs_df['img_id'].isin(ids)]
+
         # create regression data frame
         data = {y: pred_results[task].values,
                 'prob': prob_results[task].tolist()}
