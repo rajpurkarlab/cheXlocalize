@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from eval import calculate_iou
-from eval_constants import LOCALIZATION_TASKS
+from eval_constants import CHEXPERT_TASKS, LOCALIZATION_TASKS
 from heatmap_to_segmentation import cam_to_segmentation
 
 

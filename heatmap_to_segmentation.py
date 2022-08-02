@@ -24,7 +24,7 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from eval_constants import LOCALIZATION_TASKS
+from eval_constants import CHEXPERT_TASKS, LOCALIZATION_TASKS
 from utils import encode_segmentation
 
 
@@ -122,7 +122,13 @@ def pkl_to_mask(pkl_path, threshold=np.nan, prob_cutoff=0,
     # if probability cutoffs are given, then if the cxr has a predicted
     # probability that is lower than the cutoff, force the predicted
     # segmentation mask to be all zeros.
-    if info['prob'] < prob_cutoff:
+    if torch.is_tensor(info['prob']) and info['prob'].size()[0] == 14:
+        prob_idx = CHEXPERT_TASKS.index(info['task'])
+        pred_prob = info['prob'][prob_idx]
+    else:
+        pred_prob = info['prob']
+
+    if pred_prob < prob_cutoff:
         segmentation = np.zeros((img_dims[1], img_dims[0]))
     else:
         # convert to segmentation
@@ -218,7 +224,7 @@ if __name__ == '__main__':
                               if_smoothing to True, otherwise no smoothing would \
                               be performed.')
     args = parser.parse_args()
-    assert args.if_smoothing == 'True' or args.if_smoothing == 'False', \
+    assert args.if_smoothing in ['True', 'False'], \
         "`if_smoothing` flag must be either `True` or `False`"
 
     heatmap_to_mask(args)

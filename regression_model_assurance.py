@@ -49,9 +49,6 @@ if __name__ == "__main__":
     parser.add_argument('--output_path', type=str,
                         default='./saliency_segmentations.json',
                         help='json file path for saving encoded segmentations')
-    parser.add_argument('--if_smoothing', type=bool,
-                        help="True if apply smoothing to heatmap, False if not")
-    parser.add_argument('--k', type=int,
-                        help="Size of the kernel used for box filter smoothing")
     args = parser.parse_args()
+
     run_model_assurance_regression(args)

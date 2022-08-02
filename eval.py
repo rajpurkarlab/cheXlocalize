@@ -323,9 +323,9 @@ if __name__ == '__main__':
                         help='random seed to fix')
     args = parser.parse_args()
 
-    assert args.metric == 'miou' or args.metric == 'hitrate', \
+    assert args.metric in ['miou', 'hitrate'], \
         "`metric` flag must be either `miou` or `hitrate`"
-    assert args.if_human_benchmark == 'True' or args.if_human_benchmark == 'False', \
+    assert args.if_human_benchmark in ['True', 'False'], \
         "`if_human_benchmark` flag must be either `True` or `False`"
 
     np.random.seed(args.seed)

@@ -141,7 +141,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_dir', type=str, default='.',
                         help='where to save regression results')
     args = parser.parse_args()
-    assert args.evaluate_hb == 'True' or args.evaluate_hb == 'False', \
+    assert args.evaluate_hb in ['True', 'False'], \
         "`evaluate_hb` flag must be either `True` or `False`"
 
     run_features_regression(args)
