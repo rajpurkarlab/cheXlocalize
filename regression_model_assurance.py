@@ -15,14 +15,19 @@ from utils import format_ci, run_linear_regression
 
 def get_model_probability(map_dir):
     """
-    Extract model's predicted probability per cxr and per pathology
+    Extract the predicted probability per cxr and per pathology given saliency model outputs
     """
     prob_dict = {}
+    cxr_ids = []
     for task in sorted(LOCALIZATION_TASKS):
-        print(f'Extracting model probability for {task}')
+        print(f'Extracting model probability on {task}')
         probs = []
         pkl_paths = sorted(list(Path(map_dir).rglob(f"*{task}_map.pkl")))
         for pkl_path in pkl_paths:
+            # get cxr id
+            path = str(pkl_path).split('/')
+            task = path[-1].split('_')[-2]
+            cxr_id = '_'.join(path[-1].split('_')[:-2])
             # get model probability
             info = pickle.load(open(pkl_path,'rb'))
             if torch.is_tensor(info['prob']) and info['prob'].size()[0] == 14:
@@ -30,11 +35,14 @@ def get_model_probability(map_dir):
                 pred_prob = info['prob'][prob_idx]
             else:
                 pred_prob = info['prob']
-
+            
             probs.append(pred_prob)
+            if cxr_id not in cxr_ids:
+                cxr_ids.append(cxr_id)
         prob_dict[task] = probs
-
+    
     prob_df = pd.DataFrame.from_dict(prob_dict)
+    prob_df['img_id'] = sorted(cxr_ids)
     return prob_df
 
 
@@ -50,8 +58,12 @@ def run_model_assurance_regression(args):
     overall_regression = pd.DataFrame()
     for task in sorted(LOCALIZATION_TASKS):
         df = pd.DataFrame()
+        # align localization perf metrics and probabilities
+        ids = pred_results['img_id'].tolist()
+        prob_results = model_probs_df[model_probs_df['img_id'].isin(ids)]
+        # create regression data frame
         data = {y: pred_results[task].values,
-                'prob': model_probs_df[task].tolist()}
+                'prob': prob_results[task].tolist()}
         regression_df = pd.DataFrame(data)
         overall_regression = pd.concat([overall_regression, regression_df])
 

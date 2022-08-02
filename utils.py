@@ -43,7 +43,7 @@ def run_linear_regression(regression_df, task, y, x):
     mean = est2.params.loc[x]
     pval = est2.pvalues.loc[x]
     corr, corr_pval = stats.spearmanr(regression_df[y].values,regression_df[x].values,nan_policy = 'omit')
-    n = len(regression_df)
+    n = len(regression_df[regression_df[y].notnull()])
     stderr = 1.0 / math.sqrt(n - 3)
     delta = 1.96 * stderr
     lower_r = math.tanh(math.atanh(corr) - delta)
@@ -57,7 +57,7 @@ def run_linear_regression(regression_df, task, y, x):
                'corr_upper': round(upper_r,3),
                'corr': round(corr,3),
                'corr_pval': corr_pval,
-               'n': int(len(regression_df[regression_df[y].notnull()])),
+               'n': int(n),
                'feature': x,
                'task': task}
     return pd.DataFrame([results])
