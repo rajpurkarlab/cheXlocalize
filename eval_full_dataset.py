@@ -32,7 +32,7 @@ def calculate_iou(pred_mask, gt_mask, true_pos_only):
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
     else:
-        if np.sum(gt_mask) == 0:
+        if np.sum(union) == 0:
             iou_score = np.nan
         else:
             iou_score = np.sum(intersection) / (np.sum(union))
@@ -63,7 +63,7 @@ def get_ious(gt_path, pred_path, true_pos_only):
         pred_dict = json.load(f)
 
     ious = {}
-    cxr_ids = sorted(gt_dict.keys())
+    cxr_ids = sorted(pred_dict.keys())
     tasks = sorted(LOCALIZATION_TASKS)
 
     for task in tasks:
@@ -71,29 +71,30 @@ def get_ious(gt_path, pred_path, true_pos_only):
         ious[task] = []
 
         for cxr_id in cxr_ids:
-            # get ground-truth segmentation mask
-            gt_item = gt_dict[cxr_id][task]
-            gt_mask = mask.decode(gt_item)
-
             # get predicted segmentation mask
-            if cxr_id not in pred_dict:
-                pred_mask = np.zeros(gt_item['size'])
+            pred_item = pred_dict[cxr_id][task]
+            pred_mask = mask.decode(pred_item)
+
+            # get ground-truth segmentation mask
+            if cxr_id not in gt_dict:
+                gt_mask = np.zeros(pred_item['size'])
             else:
-                pred_item = pred_dict[cxr_id][task]
-                pred_mask = mask.decode(pred_item)
+                gt_item = gt_dict[cxr_id][task]
+                gt_mask = mask.decode(gt_item)
 
             assert gt_mask.shape == pred_mask.shape
 
             iou_score = calculate_iou(pred_mask, gt_mask, true_pos_only)
             ious[task].append(iou_score)
 
-        assert len(ious[task]) == len(gt_dict.keys())
+        assert len(ious[task]) == len(pred_dict.keys())
 
     return ious, cxr_ids
 
 
 def bootstrap_metric(df, num_replicates):
     """Create dataframe of bootstrap samples."""
+
     def single_replicate_performances():
         sample_ids = np.random.choice(len(df), size=len(df), replace=True)
         replicate_performances = {}
@@ -115,20 +116,17 @@ def bootstrap_metric(df, num_replicates):
 
 def compute_cis(series, confidence_level):
     sorted_perfs = series.sort_values()
-    lower_index = int(confidence_level/2 * len(sorted_perfs)) - 1
-    upper_index = int((1 - confidence_level/2) * len(sorted_perfs)) - 1
+    lower_index = int(confidence_level / 2 * len(sorted_perfs)) - 1
+    upper_index = int((1 - confidence_level / 2) * len(sorted_perfs)) - 1
     lower = sorted_perfs.iloc[lower_index].round(3)
     upper = sorted_perfs.iloc[upper_index].round(3)
-    mean = round(sorted_perfs.mean(),3)
+    mean = round(sorted_perfs.mean(), 3)
     return lower, mean, upper
 
 
 def create_ci_record(perfs, task):
-    lower, mean, upper = compute_cis(perfs, confidence_level = 0.05)
-    record = {"name": task,
-              "lower": lower,
-              "mean": mean,
-              "upper": upper}
+    lower, mean, upper = compute_cis(perfs, confidence_level=0.05)
+    record = {"name": task, "lower": lower, "mean": mean, "upper": upper}
     return record
 
 
@@ -136,16 +134,22 @@ def create_map(pkl_path):
     """
     Create saliency map of original img size·
     """
+
     class CPU_Unpickler(pickle.Unpickler):
+
         def find_class(self, module, name):
             if module == 'torch.storage' and name == '_load_from_bytes':
                 return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
-            else: return super().find_class(module, name)
+            else:
+                return super().find_class(module, name)
 
-    info = CPU_Unpickler(open(pkl_path,'rb')).load()
+    info = CPU_Unpickler(open(pkl_path, 'rb')).load()
     saliency_map = info['map']
     img_dims = info['cxr_dims']
-    map_resized = F.interpolate(saliency_map, size=(img_dims[1],img_dims[0]), mode='bilinear', align_corners=False)
+    map_resized = F.interpolate(saliency_map,
+                                size=(img_dims[1], img_dims[0]),
+                                mode='bilinear',
+                                align_corners=False)
     saliency_map = map_resized.squeeze().squeeze().detach().cpu().numpy()
     return saliency_map, img_dims
 
@@ -158,7 +162,7 @@ def get_hit_rates(gt_path, pred_path):
     """
     with open(gt_path) as f:
         gt_dict = json.load(f)
-	
+
     all_paths = sorted(list(Path(pred_path).rglob("*_map.pkl")))
     results = {}
     for pkl_path in tqdm(all_paths):
@@ -175,15 +179,14 @@ def get_hit_rates(gt_path, pred_path):
             if task in results[img_id]:
                 print(f'Check for duplicates for {task} for {img_id}')
                 break
-            else:
-                results[img_id][task] = 0
+            results[img_id][task] = np.nan
         else:
-            # get ground truth binary mask
-            if img_id not in gt_dict:
-                continue
-            else:
-                results[img_id] = {}
-                results[img_id][task] = 0
+            results[img_id] = {}
+            results[img_id][task] = np.nan
+
+        # get ground truth binary mask
+        if img_id not in gt_dict:
+            continue
 
         gt_item = gt_dict[img_id][task]
         gt_mask = mask.decode(gt_item)
@@ -191,16 +194,19 @@ def get_hit_rates(gt_path, pred_path):
         # get saliency heatmap
         sal_map, img_dims = create_map(pkl_path)
 
-        x = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[0]
-        y = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[1]
+        x = np.unravel_index(np.argmax(sal_map, axis=None), sal_map.shape)[0]
+        y = np.unravel_index(np.argmax(sal_map, axis=None), sal_map.shape)[1]
 
         assert (gt_mask.shape == sal_map.shape)
-        if (gt_mask[x][y]==1):
-            results[img_id][task] = 1
-        elif (np.sum(gt_mask)==0):
-            results[img_id][task] = np.nan
 
-    all_ids = sorted(gt_dict.keys())
+        if (gt_mask[x][y] == 1):
+            results[img_id][task] = 1
+        elif (np.sum(gt_mask) == 0):
+            results[img_id][task] = np.nan
+        else:
+            results[img_id][task] = 0
+
+    all_ids = sorted(results.keys())
 
     return results, all_ids
 
@@ -236,7 +242,7 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
     for task in bs_df.columns:
         records.append(create_ci_record(bs_df[task], task))
 
-    summary_df = pd.DataFrame.from_records(records).sort_values(by = 'name')
+    summary_df = pd.DataFrame.from_records(records).sort_values(by='name')
     summary_df['bs_mean'] = summary_df['mean']
     summary_df['mean'] = data_mean
     print(summary_df)
@@ -245,22 +251,31 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--metric', type=str,
+    parser.add_argument('--metric',
+                        type=str,
                         help='options are: miou or hitrate')
-    parser.add_argument('--gt_path', type=str,
+    parser.add_argument('--gt_path',
+                        type=str,
                         help='directory where ground-truth segmentations are \
                               saved (encoded)')
-    parser.add_argument('--pred_path', type=str,
-                        help='json path where predicted segmentations are saved \
+    parser.add_argument(
+        '--pred_path',
+        type=str,
+        help='json path where predicted segmentations are saved \
                               (if metric = miou) or directory with pickle files \
 							  containing heat maps (if metric = hitrate)')
-    parser.add_argument('--true_pos_only', default='True',
-                        help='if true, run evaluation only on the true positive \
+    parser.add_argument(
+        '--true_pos_only',
+        default='False',
+        help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
                         ground-truth segmentations)')
-    parser.add_argument('--save_dir', default='.',
+    parser.add_argument('--save_dir',
+                        default='.',
                         help='where to save evaluation results')
-    parser.add_argument('--seed', type=int, default=0,
+    parser.add_argument('--seed',
+                        type=int,
+                        default=0,
                         help='random seed to fix')
     args = parser.parse_args()
 

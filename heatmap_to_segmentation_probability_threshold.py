@@ -4,10 +4,7 @@ using RLE formats using the pycocotools Mask API. The final output is stored in
 a json file.
 
 The default thresholding used in this code is Otsu's method (an automatic global
-thresholding algorithm provided by cv2). Users can also pass in their own
-self-defined thresholds to binarize the heatmaps through --threshold_path. If
-doing this, make sure the input is a csv file with the same format as the
-provided file sample/tuning_results.csv.
+thresholding algorithm provided by cv2). Users can also pass in probability thresholds through --probability_threshold_path. If a path is given, then no segmentation is generated if a cxr's predicted probability of a pathlogy is below the given cutoff
 """
 from argparse import ArgumentParser
 import cv2
@@ -88,7 +85,7 @@ def cam_to_segmentation(cam_mask, threshold=np.nan, smoothing=False, k=0):
     return segmentation
 
 
-def pkl_to_mask(pkl_path, threshold=np.nan, smoothing=False, k=0):
+def pkl_to_mask(pkl_path, threshold=np.nan, prob_cutoff=0, smoothing=False, k=0):
     """
     Load pickle file, get saliency map and resize to original image dimension.
     Threshold the heatmap to binary segmentation.
@@ -118,18 +115,22 @@ def pkl_to_mask(pkl_path, threshold=np.nan, smoothing=False, k=0):
                                 mode='bilinear',
                                 align_corners=False)
 
-    # convert to segmentation
-    segmentation = cam_to_segmentation(map_resized,
-                                       threshold=threshold,
-                                       smoothing=smoothing,
-                                       k=k)
+    pred_prob = info['prob']
+    if pred_prob < prob_cutoff:
+        segmentation = np.zeros((img_dims[1], img_dims[0]))
+    else:
+        # convert to segmentation
+        segmentation = cam_to_segmentation(map_resized,
+                                        threshold=threshold,
+                                        smoothing=smoothing,
+                                        k=k)
 
     return segmentation
 
 
 def heatmap_to_mask(map_dir,
                     output_path,
-                    threshold_path,
+                    probability_threshold_path,
                     smoothing=False,
                     k=0):
     """
@@ -150,15 +151,15 @@ def heatmap_to_mask(map_dir,
             continue
 
         # get encoded segmentation mask
-        if threshold_path:
-            tuning_results = pd.read_csv(threshold_path)
-            best_threshold = tuning_results[tuning_results['task'] ==
-                                            task]['threshold'].values[0]
+        if probability_threshold_path:
+            prob_results = pd.read_csv(probability_threshold_path)
+            max_miou = prob_results.loc[prob_results.groupby(['task'])['mIoU'].agg('idxmax')]
+            prob_cutoff = max_miou[max_miou['task'] == task]['prob_threshold'].values[0]
         else:
-            best_threshold = np.nan
+            prob_cutoff = 0
 
         segmentation = pkl_to_mask(pkl_path,
-                                   threshold=best_threshold,
+                                   prob_cutoff=prob_cutoff,
                                    smoothing=smoothing,
                                    k=k)
         encoded_mask = encode_segmentation(segmentation)
@@ -186,11 +187,12 @@ if __name__ == '__main__':
     parser.add_argument('--map_dir',
                         type=str,
                         help='directory with pickle files containing heatmaps')
+
     parser.add_argument(
-        '--threshold_path',
+        '--probability_threshold_path',
         type=str,
-        help="csv file that stores pre-defined threshold values. \
-                        If no path is given, script uses Otsu's.")
+        help="csv file that stores pre-defined probability cutoffs. \
+                    If a path is given, then no segmentation is generated if the predicted probability is below the cutoff")
     parser.add_argument('--output_path',
                         type=str,
                         default='./saliency_segmentations.json',
@@ -206,5 +208,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    heatmap_to_mask(args.map_dir, args.output_path, args.threshold_path,
+    heatmap_to_mask(args.map_dir, args.output_path, args.probability_threshold_path,
                     args.if_smoothing, args.k)
