@@ -15,12 +15,12 @@ from utils import format_ci, run_linear_regression
 
 def get_model_probability(map_dir):
     """
-    Extract the predicted probability per cxr and per pathology given saliency model outputs
+    Extract model's predicted probability per cxr and per pathology
     """
     prob_dict = {}
     cxr_ids = []
     for task in sorted(LOCALIZATION_TASKS):
-        print(f'Extracting model probability on {task}')
+        print(f'Extracting model probability for {task}')
         probs = []
         pkl_paths = sorted(list(Path(map_dir).rglob(f"*{task}_map.pkl")))
         for pkl_path in pkl_paths:
