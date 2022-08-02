@@ -258,25 +258,25 @@ def get_hb_hitrates(gt_path, pred_path):
 def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only, if_human_benchmark):
     """
 	Generates and saves three csv files:
-	-- `{miou/hitrate}_results.csv`: IoU or hit/miss results for each CXR and
+	-- `{iou/hitmiss}_results.csv`: IoU or hit/miss results for each CXR and
                                      each pathology.
-	-- `{miou/hitrate}_bootstrap_results.csv`: 1000 bootstrap samples of mIoU
-                                               or hit rate for each pathology.
+	-- `{iou/hitmiss}_bootstrap_results.csv`: 1000 bootstrap samples of IoU
+                                               or hit/miss for each pathology.
 	-- `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap
                                              confidence intervals for each pathology.
     """
     # create save_dir if it does not already exist
     Path(save_dir).mkdir(exist_ok=True, parents=True)
 
-    if metric == 'miou':
+    if metric == 'iou':
         ious, cxr_ids = get_ious(gt_path, pred_path, true_pos_only)
         metric_df = pd.DataFrame.from_dict(ious)
-    elif metric == 'hitrate' and if_human_benchmark == False:
-        metric_df, cxr_ids = get_hitrates(gt_path, pred_path)
-    elif metric == 'hitrate' and if_human_benchmark == True:
-        metric_df, cxr_ids = get_hb_hitrates(gt_path, pred_path)
+    elif metric == 'hitmiss' and if_human_benchmark == False:
+        metric_df, cxr_ids = get_hitrates(gt_path, pred_path, true_pos_only)
+    elif metric == 'hitmiss' and if_human_benchmark == True:
+        metric_df, cxr_ids = get_hb_hitrates(gt_path, pred_path, true_pos_only)
     else:
-        raise ValueError('`metric` must be either `miou` or `hitrate`')
+        raise ValueError('`metric` must be either `iou` or `hitmiss`')
 
     hb = 'humanbenchmark_' if if_human_benchmark else ''
 
@@ -300,14 +300,14 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only, if_human_bench
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--metric', type=str,
-                        help='options are: miou or hitrate')
+                        help='options are: iou or hitmiss')
     parser.add_argument('--gt_path', type=str,
                         help='directory where ground-truth segmentations are \
                               saved (encoded)')
     parser.add_argument('--pred_path', type=str,
                         help='json path where predicted segmentations are saved \
-                              (if metric = miou) or directory with pickle files \
-							  containing heat maps (if metric = hitrate)')
+                              (if metric = iou) or directory with pickle files \
+							  containing heat maps (if metric = hitmiss)')
     parser.add_argument('--true_pos_only', type=str, default='True',
                         help='if true, run evaluation only on the true positive \
                         slice of the dataset (CXRs that contain predicted and \
@@ -323,8 +323,8 @@ if __name__ == '__main__':
                         help='random seed to fix')
     args = parser.parse_args()
 
-    assert args.metric in ['miou', 'hitrate'], \
-        "`metric` flag must be either `miou` or `hitrate`"
+    assert args.metric in ['iou', 'hitmiss'], \
+        "`metric` flag must be either `iou` or `hitmiss`"
     assert args.if_human_benchmark in ['True', 'False'], \
         "`if_human_benchmark` flag must be either `True` or `False`"
 

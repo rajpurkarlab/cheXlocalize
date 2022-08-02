@@ -25,7 +25,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from eval_constants import CHEXPERT_TASKS, LOCALIZATION_TASKS
-from utils import encode_segmentation
+from utils import encode_segmentation, parse_pkl_filename
 
 
 def cam_to_segmentation(cam_mask, threshold=np.nan, smoothing=False, k=0):
@@ -147,11 +147,7 @@ def heatmap_to_mask(args):
 
     results = {}
     for pkl_path in tqdm(all_paths):
-        # break down path to image name and task
-        path = str(pkl_path).split('/')
-        task = path[-1].split('_')[-2]
-        img_id = '_'.join(path[-1].split('_')[:-2])
-
+        task, img_id = parse_pkl_filename(pkl_path)
         if task not in LOCALIZATION_TASKS:
             continue
 

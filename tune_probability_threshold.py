@@ -1,5 +1,6 @@
 """
 When evaluating mIoU on the full dataset, we ensure that the final binary segmentation is consistent with model probability output by applying another layer of thresholding such that the segmentation mask is all zeros if the predicted probability is below a chosen level.
+
 The probability threshold is determined per pathology by maximizing the mIoU on the validation set.
 """
 from argparse import ArgumentParser
@@ -63,11 +64,16 @@ def find_threshold(task, gt_dict, cam_dir):
     """
     cam_pkl = sorted(list(Path(cam_dir).rglob(f"*{task}_map.pkl")))
     cutoffs = np.arange(0,.9,.1)
-    # We make this one exception for lung lesion. On the validation set, using threshold = 0 gives mIoU of 0.001 whereas other thresholds
-    # yield mIoU of 0. This is because there is only one lung lesion segmentation in the validation set which makes the 0.001 improvement less trust-worthy. 
-    # If no threshold is set, then we will end up with 668 saliency segmentations on Lung Lesion (given the low prevalence of this pathology, this will result in massive false postives) 
-    if task == 'Lung Lesion': 
+    # We make this one exception for Lung Lesion. On the val set, using
+    # threshold = 0 gives mIoU of 0.001, whereas other thresholds yield mIoU of
+    # 0. This is because there is only one Lung Lesion segmentation in the
+    # CheXpert val set, which makes the 0.001 improvement less trustworthy.
+    # If no threshold is set, then we will end up with 668 saliency
+    # segmentations on Lung Lesion (given the low prevalence of this pathology,
+    # this will result in false postives).
+    if task == 'Lung Lesion':
         cutoffs = np.arange(0.1,.9,.1)
+
     mious = [compute_miou(cutoff, cam_pkl, gt_dict) for cutoff in cutoffs]
     cutoff = cutoffs[mious.index(max(mious))]
     print(f"cutoff: {cutoffs}; iou: {mious}")

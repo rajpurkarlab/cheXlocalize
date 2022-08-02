@@ -1,22 +1,25 @@
 """
-TODO
+Run a simple linear regression for each pathology using the model’s probability output as the single independent variable and using the predicted evaluation metric (IoU or hit/miss) as the dependent variable. The script also runs a simple regression that uses the same approach as above, but that includes all 10 pathologies.
 """
 from argparse import ArgumentParser
 import json
-import pickle
 import numpy as np
+import pandas as pd
 from pathlib import Path
+import pickle
 import torch
-from eval_constants import LOCALIZATION_TASKS
-from utils import run_linear_regression
+
+from eval_constants import CHEXPERT_TASKS, LOCALIZATION_TASKS
+from utils import format_ci, run_linear_regression
+
 
 def get_model_probability(map_dir):
     """
-    Extract the predicted probability per cxr and per pathology given saliency model outputs
+    Extract model's predicted probability per cxr and per pathology
     """
     prob_dict = {}
     for task in sorted(LOCALIZATION_TASKS):
-        print(f'Extracting model probability on {task}')
+        print(f'Extracting model probability for {task}')
         probs = []
         pkl_paths = sorted(list(Path(map_dir).rglob(f"*{task}_map.pkl")))
         for pkl_path in pkl_paths:
@@ -30,51 +33,58 @@ def get_model_probability(map_dir):
 
             probs.append(pred_prob)
         prob_dict[task] = probs
-    
+
     prob_df = pd.DataFrame.from_dict(prob_dict)
     return prob_df
 
+
 def run_model_assurance_regression(args):
     """Run regression using model probability as the independent variable."""
-    gradcam_iou = pd.read_csv(f'{input_path}/test_gradcam_densenet_ensemble_full_iou.csv') # this is the output of mIoU evaluation on the full dataset. We can add a flag such as --pred_miou_results
-    gradcam_pt = pd.read_csv(f'{input_path}/test_gradcam_densenet_ensemble_ptgame.csv') 
-    probs_df = get_model_probability(args.map_dir)
-    # probs_df = pd.read_csv(f'{input_path}/prob.csv')
+    pred_results = pd.read_csv(args.pred_results)
+    model_probs_df = get_model_probability(args.map_dir)
+    y = args.metric
 
-    for y in ['iou', 'pt']:
-        coef_summary = pd.DataFrame(columns = ["lower","mean","upper","coef_pval","corr_lower", "corr","corr_upper","corr_pval", "feature","task"])
-        overall_regression = pd.DataFrame()
-        for task in sorted(LOCALIZATION_TASKS):
-            df = pd.DataFrame()
+    coef_summary = pd.DataFrame(columns = ["lower", "mean", "upper",
+                        "coef_pval","corr_lower", "corr","corr_upper",
+                        "corr_pval", "feature", "task"])
+    overall_regression = pd.DataFrame()
+    for task in sorted(LOCALIZATION_TASKS):
+        df = pd.DataFrame()
+        data = {y: pred_results[task].values,
+                'prob': model_probs_df[task].tolist()}
+        regression_df = pd.DataFrame(data)
+        overall_regression = pd.concat([overall_regression, regression_df])
 
-            data = {'iou':gradcam_iou[task].values,
-                    'pt': gradcam_pt[task].values,
-                    'prob': probs_df[task].tolist()
-                }
-            regression_df = pd.DataFrame(data) 
-            overall_regression = pd.concat([overall_regression,regression_df])
+        # run regression
+        results = run_linear_regression(regression_df, task, y, 'prob')
+        coef_summary = pd.concat([coef_summary, results])
 
-            # run regression
-            results = run_linear_regression(regression_df, task, y, 'prob')
-            coef_summary = pd.concat([coef_summary,results])
-
-        # add overall regression
-        results = run_linear_regression(overall_regression, 'Overall', y, 'prob')
-        coef_summary = pd.concat([coef_summary,results])
-        coef_summary = coef_summary.apply(format_ci,axis = 1).iloc[:,-4:]
-        coef_summary.to_csv(f'{output_path}/regression_prob_{y}.csv', index = False)
+    # add overall regression
+    results = run_linear_regression(overall_regression, 'Overall', y, 'prob')
+    coef_summary = pd.concat([coef_summary, results])
+    coef_summary = coef_summary.apply(format_ci,
+                                      bonferroni_correction=1,
+                                      axis = 1)\
+                    [['task', 'n',
+                      'Linear regression coefficients',
+                      'Spearman correlations']]
+    coef_summary.to_csv(f'{args.save_dir}/regression_modelprob_{y}.csv',
+                        index = False)
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
+    parser.add_argument('--metric', type=str,
+                        help='options are: iou or hitmiss')
     parser.add_argument('--map_dir', type=str,
                         help='directory with pickle files containing heatmaps')
-    parser.add_argument('--threshold_path', type=str,
-                        help="csv file that stores pre-defined threshold values. \
-                        If no path is given, script uses Otsu's.")
-    parser.add_argument('--output_path', type=str,
-                        default='./saliency_segmentations.json',
-                        help='json file path for saving encoded segmentations')
+    parser.add_argument('--pred_results', type=str,
+                        help='path to csv file with saliency method IoU or \
+                              hit/miss results for each CXR and each pathology.')
+    parser.add_argument('--save_dir', type=str, default='.',
+                        help='where to save regression results')
     args = parser.parse_args()
+    assert args.metric in ['iou', 'hitmiss'], \
+        "`metric` flag must be either `iou` or `hitmiss`"
 
     run_model_assurance_regression(args)

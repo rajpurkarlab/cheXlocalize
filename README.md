@@ -16,6 +16,7 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 - [Compute pathology features](#path_features)
 - [Run regressions on pathology features](#regression_pathology)
 - [Run regressions on model assurance](#regression_model_assurance)
+- [Get sensitivity and specificity values](#sens_spec)
 - [Citation](#citation)
 
 
@@ -166,7 +167,7 @@ To create the csv file with these cutoffs (and that should be used with the flag
 **Optional flags**
 * `--save_dir`: the directory to save the csv file that stores the tuned thresholds. Default is current directory.
 
-In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4 because when evaluating localization performance using the full dataset, we found that many false postive saliency segmentations were generated even though model probability was low. In practice when evaluation only uses the true positve slice of the dataset, we recommend that users use `<threshold_path>` to find the best thresholds because in this scenario we are not accounting for false positives. 
+In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4 because when evaluating localization performance using the full dataset, we found that many false postive saliency segmentations were generated even though model probability was low. In practice, when evaluation only uses the true positve slice of the dataset, we recommend that users use `<threshold_path>` to find the best thresholds because in this scenario we are not accounting for false positives.
 
 This script will replicate `./sample/probability_tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
 
@@ -242,11 +243,11 @@ To run evaluation, use the following command:
 ```
 
 **Required flags**
-* `--metric`: options are `miou` or `hitrate`
+* `--metric`: options are `iou` or `hitmiss`
 * `--gt_path`: Path to file where ground-truth segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`. Or, if you downloaded the CheXlocalize dataset, then this is the json file `/cheXlocalize_dataset/gt_segmentations_val.json`.
 * `--pred_path`:
-	* If `metric = miou`: this should be the path to file where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or `annotation_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`.
-	* If `metric = hitrate`: when evaluating saliency methods, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`. However, when evaluating human benchmark annotations, then this should be a json file that holds the human annotations for most representative points. TODO: say what format it should be in and say that we'll be releasing these after the competition.
+	* If `metric = iou`: this should be the path to file where predicted segmentations are saved (encoded). This could be the json output of `heatmap_to_segmentation.py`, or `annotation_to_segmentation.py`, or, if you downloaded the CheXlocalize dataset, then this could be the json file `/cheXlocalize_dataset/gradcam_segmentations_val.json`.
+	* If `metric = hitmiss`: when evaluating saliency methods, then this should be directory with pickle files containing heatmaps (the script extracts the most representative point from the pickle files). If you downloaded the CheXlocalize dataset, then these pickle files are in `/cheXlocalize_dataset/gradcam_maps_val/`. However, when evaluating human benchmark annotations, then this should be a json file that holds the human annotations for most representative points. TODO: say what format it should be in and say that we'll be releasing these after the competition.
 
 **Optional flags**
 * `--true_pos_only`: Default is `True`. If `True`, run evaluation only on the true positive slice of the dataset (CXRs that contain both predicted and ground-truth segmentations). If `False`, also include CXRs with a predicted segmentation but without a ground-truth segmentation, and include CXRs with a ground-truth segmentation but without a predicted segmentation.
@@ -254,7 +255,7 @@ To run evaluation, use the following command:
 * `--if_human_benchmark`: If `True`, run evaluation on human benchmark performance. Default is set to `False`. This is especially important when evaluating hit rate performance, since the most representative point input for saliency method is formatted differently than the most representative point input for human benchmark.
 * `--seed`: Default is `0`. Random seed to fix for bootstrapping.
 
-If `metric = miou`, both `pred_path` and `gt_path` must be json files where each key is a single CXR id with its data formatted as follows:
+If `metric = iou`, both `pred_path` and `gt_path` must be json files where each key is a single CXR id with its data formatted as follows:
 
 ```
 {
@@ -274,11 +275,11 @@ If `metric = miou`, both `pred_path` and `gt_path` must be json files where each
 }
 ```
 
-Both `pred_path` (if `metric = miou`) and `gt_path` json files must contain a key for all CXR ids (regardless of whether it has any positive ground-truth labels), and each CXR id key must have values for all ten pathologies (regardless of ground-truth label). In other words, all CXRs and images are indexed. If a CXR has no segmentations, we store a segmentation mask of all zeros. If using your own `pred_path` and `gt_path` json files as input to this script, be sure that they are formatted per the above, with segmentation masks encoded using RLE using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
+Both `pred_path` (if `metric = iou`) and `gt_path` json files must contain a key for all CXR ids (regardless of whether it has any positive ground-truth labels), and each CXR id key must have values for all ten pathologies (regardless of ground-truth label). In other words, all CXRs and images are indexed. If a CXR has no segmentations, we store a segmentation mask of all zeros. If using your own `pred_path` and `gt_path` json files as input to this script, be sure that they are formatted per the above, with segmentation masks encoded using RLE using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
 This evaluation script generates three csv files:
-* `{miou/hitrate}_results_per_cxr.csv`: IoU or hit/miss results for each CXR and each pathology.
-* `{miou/hitrate}_bootstrap_results.csv`: 1000 bootstrap samples of mIoU or hit rate for each pathology.
+* `{iou/hitmiss}_results_per_cxr.csv`: IoU or hit/miss results for each CXR and each pathology.
+* `{iou/hitmiss}_bootstrap_results.csv`: 1000 bootstrap samples of IoU or hit/miss for each pathology.
 * `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
 
 <a name="path_features"></a>
@@ -312,14 +313,14 @@ We provide a script to run a simple linear regression with the evaluation metric
 
 **Required flags**
 * `--features_dir`: Path to directory that holds four csv files: `area_ratio.csv`, `elongation.csv`, `num_instances.csv`, and `rec_area_ratio.csv`. These four files are the output of `compute_pathology_features.py`.
-* `--pred_miou_results`: path to csv file with saliency method IoU results for each CXR and each pathology. This is the output of `eval.py` called `miou_results_per_cxr.csv`.
-* `--pred_hitrate_results`: path to csv file with saliency method hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitrate_results_per_cxr.csv`.
+* `--pred_iou_results`: path to csv file with saliency method IoU results for each CXR and each pathology. This is the output of `eval.py` called `iou_results_per_cxr.csv`.
+* `--pred_hitmiss_results`: path to csv file with saliency method hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitmiss_results_per_cxr.csv`.
 
 **Optional flags**
-* `--evalute_hb`: Default is `False`. If true, evaluate human benchmark in addition to saliency method. If `True`, the flags `hb_miou_results` and `hb_hitrate_results` (below) are also required. If `True`, additional regressions will be run using the difference between the evaluation metrics of the saliency method pipeline and the human benchmark as the dependent variable (to understand the relationship between the geometric features of a pathology and the gap in localization performance between the saliency method pipeline and the human benchmark).
-* `--hb_miou_results`: Path to csv file with human benchmark IoU results for each CXR and each pathology. This is the output of `eval.py` called `miou_humanbenchmark_results_per_cxr.csv`.
-* `--hb_hitrate_results`: Path to csv file with human benchmark hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitrate_humanbenchmark_results_per_cxr.csv`.
-* `--save_dir`: Where to save regression results. Default is current directory. If `evaluate_hb` is `True`, four files will be saved: `regression_pred_miou.csv`, `regression_pred_hitrate.csv`, `regression_miou_diff.csv`, `regression_hitrate_diff.csv`. If `evaluate_hb` is `False`, only two files will be saved: `regression_pred_miou.csv`, `regression_pred_hitrate.csv`.
+* `--evalute_hb`: Default is `False`. If true, evaluate human benchmark in addition to saliency method. If `True`, the flags `hb_iou_results` and `hb_hitmiss_results` (below) are also required. If `True`, additional regressions will be run using the difference between the evaluation metrics of the saliency method pipeline and the human benchmark as the dependent variable (to understand the relationship between the geometric features of a pathology and the gap in localization performance between the saliency method pipeline and the human benchmark).
+* `--hb_iou_results`: Path to csv file with human benchmark IoU results for each CXR and each pathology. This is the output of `eval.py` called `miou_humanbenchmark_results_per_cxr.csv`.
+* `--hb_hitmiss_results`: Path to csv file with human benchmark hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitmiss_humanbenchmark_results_per_cxr.csv`.
+* `--save_dir`: Where to save regression results. Default is current directory. If `evaluate_hb` is `True`, four files will be saved: `regression_features_pred_iou.csv`, `regression_features_pred_hitmiss.csv`, `regression_features_iou_diff.csv`, `regression_features_hitmiss_diff.csv`. If `evaluate_hb` is `False`, only two files will be saved: `regression_features_pred_iou.csv`, `regression_features_pred_hitmiss.csv`.
 
 In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), only the true positive slice was included in each regression (see Table 2). Each feature is normalized using min-max normalization and the regression coefficient can be interpreted as the effect of that geometric feature on the evaluation metric at hand. The regression results report the 95% confidence interval and the Bonferroni corrected p-values. For confidence intervals and p-values, we use the standard calculation for linear models.
 
@@ -331,7 +332,19 @@ We provide a script to run a simple linear regression for each pathology using t
 (chexlocalize) > python regression_model_assurance.py [FLAGS]
 ```
 
+**Required flags**
+* `--map_dir`: the directory with pickle files containing the heatmaps. The script extracts the heatmaps from the pickle files.
+* `--pred_iou_results`: path to csv file with saliency method IoU results for each CXR and each pathology. This is the output of `eval.py` called `iou_results_per_cxr.csv`.
+* `--pred_hitmiss_results`: path to csv file with saliency method hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitmiss_results_per_cxr.csv`.
+
+**Optional flags**
+* `--save_dir`: Where to save regression results. Default is current directory. If `evaluate_hb` is `True`, four files will be saved: `regression_features_pred_iou.csv`, `regression_features_pred_hitmiss.csv`, `regression_features_iou_diff.csv`, `regression_features_hitmiss_diff.csv`. If `evaluate_hb` is `False`, only two files will be saved: `regression_features_pred_iou.csv`, `regression_features_pred_hitmiss.csv`.
 Note that in [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), for each of the 11 regressions, we use the _full_ dataset since the analysis of false positives and false negatives was also of interest (see Table 3). In addition to the linear regression coefficients, the regression results also report the Spearman correlation coefficients to capture any potential non-linear associations.
+
+<a name="sens_spec"></a>
+## Get sensitivity and specificity values
+
+
 
 <a name="citation"></a>
 ## Citation

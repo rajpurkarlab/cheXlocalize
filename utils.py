@@ -6,6 +6,13 @@ from scipy import stats
 import statsmodels.formula.api as smf
 
 
+def parse_pkl_filename(pkl_path):
+    path = str(pkl_path).split('/')
+    task = path[-1].split('_')[-2]
+    img_id = '_'.join(path[-1].split('_')[:-2])
+    return task, img_id
+
+
 def encode_segmentation(segmentation_arr):
     """
     Encode a binary segmentation (np.array) to RLE format using the pycocotools Mask API.
@@ -54,3 +61,35 @@ def run_linear_regression(regression_df, task, y, x):
                'feature': x,
                'task': task}
     return pd.DataFrame([results])
+
+
+def format_ci(row, **kwargs):
+    """Format confidence interval."""
+    def format_stats_sig(p_val):
+        """Output *, **, *** based on p-value."""
+        stats_sig_level = ''
+        if p_val < 0.001 / kwargs['bonferroni_correction']:
+            stats_sig_level = '***'
+        elif p_val < 0.01 / kwargs['bonferroni_correction']:
+            stats_sig_level = '**'
+        elif p_val < 0.05 / kwargs['bonferroni_correction']:
+            stats_sig_level = '*'
+        return stats_sig_level
+
+    # CI on linear regression coefficients
+    p_val = row['coef_pval']
+    stats_sig_level = format_stats_sig(p_val)
+    mean = row['mean']
+    upper = row['upper']
+    lower = row['lower']
+    row['Linear regression coefficients'] =  f'{mean}, ({lower}, {upper}){stats_sig_level}'
+
+    # CI on spearman correlations
+    p_val = row['corr_pval']
+    stats_sig_level = format_stats_sig(p_val)
+    mean = row['corr']
+    upper = row['corr_upper']
+    lower = row['corr_lower']
+    row['Spearman correlations'] =  f'{mean}, ({lower}, {upper}){stats_sig_level}'
+
+    return row
