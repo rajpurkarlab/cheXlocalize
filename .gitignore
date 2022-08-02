@@ -123,3 +123,5 @@ lightning_logs/
 
 # sandbox
 sandbox
+
+.DS_Store
