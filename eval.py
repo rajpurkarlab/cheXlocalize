@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from eval_constants import LOCALIZATION_TASKS
+from heatmap_to_segmentation import pkl_to_mask
 
 
 def calculate_iou(pred_mask, gt_mask, true_pos_only):
@@ -148,18 +149,6 @@ def create_ci_record(perfs, task):
     return record
 
 
-def create_map(pkl_path):
-    """
-    Create saliency map of original img size·
-    """
-    info = pickle.load(open(pkl_path,'rb'))
-    saliency_map = info['map']
-    img_dims = info['cxr_dims']
-    map_resized = F.interpolate(saliency_map, size=(img_dims[1],img_dims[0]), mode='bilinear', align_corners=False)
-    saliency_map = map_resized.squeeze().squeeze().detach().cpu().numpy()
-    return saliency_map, img_dims
-
-
 def get_hitrates(gt_path, pred_path):
     """
 	Args:
@@ -199,8 +188,7 @@ def get_hitrates(gt_path, pred_path):
         gt_mask = mask.decode(gt_item)
 
         # get saliency heatmap
-        sal_map, img_dims = create_map(pkl_path)
-
+        sal_map = pkl_to_mask(pkl_path)
         x = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[0]
         y = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[1]
 
@@ -272,9 +260,9 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only, if_human_bench
         ious, cxr_ids = get_ious(gt_path, pred_path, true_pos_only)
         metric_df = pd.DataFrame.from_dict(ious)
     elif metric == 'hitmiss' and if_human_benchmark == False:
-        metric_df, cxr_ids = get_hitrates(gt_path, pred_path, true_pos_only)
+        metric_df, cxr_ids = get_hitrates(gt_path, pred_path)
     elif metric == 'hitmiss' and if_human_benchmark == True:
-        metric_df, cxr_ids = get_hb_hitrates(gt_path, pred_path, true_pos_only)
+        metric_df, cxr_ids = get_hb_hitrates(gt_path, pred_path)
     else:
         raise ValueError('`metric` must be either `iou` or `hitmiss`')
 
