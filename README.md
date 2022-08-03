@@ -8,6 +8,7 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 - [Overview](#overview)
 - [Setup](#setup)
 - [Download data](#download)
+- [Exploratory data analysis](#eda)
 - [Generate segmentations from saliency method heatmaps](#heatmap_to_segm)
 	- [Fine-tune segmentation thresholds](#seg_threshold)
 	- [Fine-tune probability thresholds](#prob_threshold)
@@ -65,6 +66,20 @@ Download the CheXlocalize dataset [here](https://stanfordaimi.azurewebsites.net/
 We have also included a small sample of the above data in this repo in [`./sample`](https://github.com/rajpurkarlab/cheXlocalize/tree/master/sample).
 
 If you'd like to use your own heatmaps/annotations/segmentations, see the relevant sections below for the expected data formatting.
+
+<a name="eda"></a>
+## Exploratory data analysis
+Given a json file with segmentations, for each pathology, to count the number of CXRs with at least one segmentation, run:
+
+```
+(chexlocalize) > python count_segs.py [FLAGS]
+```
+
+**Required flags**
+* `--seg_path`: the json file where segmentations are saved (encoded). [_Evaluate localization performance_](#eval) describes how the segmentation json should be formated.
+
+**Optional flags**
+* `--save_dir`: the directory to save the csv file `n_segs.csv` with results. Default is current directory.
 
 <a name="heatmap_to_segm"></a>
 ## Generate segmentations from saliency method heatmaps
