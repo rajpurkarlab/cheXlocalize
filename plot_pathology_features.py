@@ -44,16 +44,18 @@ def plot(args):
 
     sns.set_style("whitegrid")
     features = ['n_instance', 'area_ratio', 'elongation', 'irrectangularity']
-    for feature in features:
+    features_labels = ['Number of Instances', 'Area Ratio', 'Elongation',
+                       'Irrectangularity']
+    for feature, feature_label in zip(features, features_labels):
         task_labels = sorted(LOCALIZATION_TASKS)
         task_labels[5] = 'E. Cardiom.'
         plt.figure(figsize=(12,6))
         g1 = sns.boxenplot(x='task', y=feature, data=overall_df,
                            palette=sns.color_palette("husl",10))
-        g1.set_xticklabels(task_labels, fontsize=10, rotation=60, ha="right",
+        g1.set_xticklabels(task_labels, fontsize=14, rotation=60, ha="right",
                            rotation_mode="anchor")
         plt.xlabel('')
-        plt.ylabel(feature,fontsize=12)
+        plt.ylabel(feature_label,fontsize=14)
         plt.tight_layout()
         plt.savefig(f'{args.save_dir}/{feature}_dist.png',dpi=300)
 
