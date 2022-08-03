@@ -15,6 +15,7 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 - [Generate segmentations from human annotations](#ann_to_segm)
 - [Evaluate localization performance](#eval)
 - [Compute pathology features](#path_features)
+	- [Plot distribution of pathology features](#dist_path_features)
 - [Run regressions on pathology features](#regression_pathology)
 - [Run regressions on model assurance](#regression_model_assurance)
 - [Get precision and recall values](#precision_recall)
@@ -76,7 +77,7 @@ Given a json file with segmentations, for each pathology, to count the number of
 ```
 
 **Required flags**
-* `--seg_path`: the json file where segmentations are saved (encoded). [_Evaluate localization performance_](#eval) describes how the segmentation json should be formated.
+* `--seg_path`: the json file path where segmentations are saved (encoded). [_Evaluate localization performance_](#eval) describes how the segmentation json should be formated.
 
 **Optional flags**
 * `--save_dir`: the directory to save the csv file `n_segs.csv` with results. Default is current directory.
@@ -317,6 +318,21 @@ To compute the four pathology features, run:
 Note that we use the ground-truth annotations to extract the number of instances, and we use the ground-truth segmentation masks to calculate area, elongation and rectangularity. We chose to extract number of instances from annotations because sometimes radiologists draw two instances for a pathology that are overlapping; in this case, the number of annotations would be 2, but the number of segmentations would be 1.
 
 Running this script on the validation set annotations and segmentations from the CheXlocalize dataset should take about 5 minutes.
+
+<a name="dist_path_features"></a>
+### Plot distribution of pathology features
+
+To plot the distribution of the four pathology features across all 10 pathologies, run:
+
+```
+(chexlocalize) > python plot_pathology_features.py [FLAGS]
+```
+
+**Required flags**
+* `--features_dir`: Path to directory that holds four csv files: `area_ratio.csv`, `elongation.csv`, `num_instances.csv`, and `rec_area_ratio.csv`. These four files are the output of `compute_pathology_features.py`.
+
+**Optional flags**
+* `--save_dir`: Where to save plots. Default is current directory.
 
 <a name="regression_pathology"></a>
 ## Run regressions on pathology features
