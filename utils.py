@@ -1,9 +1,20 @@
+import io
 import math
 import numpy as np
 import pandas as pd
+import pickle
 from pycocotools import mask
 from scipy import stats
 import statsmodels.formula.api as smf
+import torch
+
+
+class CPU_Unpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == 'torch.storage' and name == '_load_from_bytes':
+            return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
+        else:
+            return super().find_class(module, name)
 
 
 def parse_pkl_filename(pkl_path):

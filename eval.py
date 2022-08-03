@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from eval_constants import LOCALIZATION_TASKS
-from heatmap_to_segmentation import pkl_to_mask
+from utils import CPU_Unpickler
 
 
 def calculate_iou(pred_mask, gt_mask, true_pos_only):
@@ -149,6 +149,16 @@ def create_ci_record(perfs, task):
     return record
 
 
+def get_map(pkl_path):
+    info = CPU_Unpickler(open(pkl_path, 'rb')).load()
+    saliency_map = info['map']
+    img_dims = info['cxr_dims']
+    map_resized = F.interpolate(saliency_map, size=(img_dims[1],img_dims[0]),
+                                mode='bilinear', align_corners=False)
+    saliency_map = map_resized.squeeze().squeeze().detach().cpu().numpy()
+    return saliency_map
+
+
 def get_hitrates(gt_path, pred_path):
     """
 	Args:
@@ -188,7 +198,7 @@ def get_hitrates(gt_path, pred_path):
         gt_mask = mask.decode(gt_item)
 
         # get saliency heatmap
-        sal_map = pkl_to_mask(pkl_path)
+        sal_map = get_map(pkl_path)
         x = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[0]
         y = np.unravel_index(np.argmax(sal_map, axis = None), sal_map.shape)[1]
 

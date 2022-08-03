@@ -11,7 +11,6 @@ provided file sample/tuning_results.csv.
 """
 from argparse import ArgumentParser
 import cv2
-import io
 import json
 import numpy as np
 import pandas as pd
@@ -25,7 +24,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from eval_constants import CHEXPERT_TASKS, LOCALIZATION_TASKS
-from utils import encode_segmentation, parse_pkl_filename
+from utils import CPU_Unpickler, encode_segmentation, parse_pkl_filename
 
 
 def cam_to_segmentation(cam_mask, threshold=np.nan, smoothing=False, k=0):
@@ -103,12 +102,6 @@ def pkl_to_mask(pkl_path, threshold=np.nan, prob_cutoff=0,
         segmentation (np.ndarray): binary segmentation output
     """
     # load pickle file
-    class CPU_Unpickler(pickle.Unpickler):
-        def find_class(self, module, name):
-            if module == 'torch.storage' and name == '_load_from_bytes':
-                return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
-            else:
-                return super().find_class(module, name)
     info = CPU_Unpickler(open(pkl_path, 'rb')).load()
 
     # get saliency map and resize
