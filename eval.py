@@ -292,7 +292,7 @@ def evaluate(gt_path, pred_path, save_dir, metric, true_pos_only, if_human_bench
 
     summary_df = pd.DataFrame.from_records(records).sort_values(by='name')
     print(summary_df)
-    summary_df.to_csv(f'{save_dir}/{metric}_summary_results.csv', index=False)
+    summary_df.to_csv(f'{save_dir}/{metric}_{hb}summary_results.csv', index=False)
 
 
 if __name__ == '__main__':
