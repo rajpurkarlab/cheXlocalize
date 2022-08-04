@@ -83,8 +83,9 @@ def run_features_regression(args):
         coef_summary = coef_summary.apply(format_ci,
                                           bonferroni_correction=4,
                                           axis=1)\
-                        [['task', 'Linear regression coefficients']]
-        coef_summary.to_csv(f'{args.save_dir}/regression_features_{y}.csv', index=False)
+                        [['task', 'feature', 'Linear regression coefficients']]
+        coef_summary.to_csv(f'{args.save_dir}/regression_features_{y}.csv',
+                            index=False)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
