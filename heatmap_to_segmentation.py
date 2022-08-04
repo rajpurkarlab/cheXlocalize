@@ -117,7 +117,7 @@ def pkl_to_mask(pkl_path, threshold=np.nan, prob_cutoff=0,
     # segmentation mask to be all zeros.
     if torch.is_tensor(info['prob']) and info['prob'].size()[0] == 14:
         prob_idx = CHEXPERT_TASKS.index(info['task'])
-        pred_prob = info['prob'][prob_idx]
+        pred_prob = info['prob'][prob_idx].item()
     else:
         pred_prob = info['prob']
 
