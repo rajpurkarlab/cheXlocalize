@@ -14,6 +14,7 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 	- [Fine-tune probability thresholds](#prob_threshold)
 - [Generate segmentations from human annotations](#ann_to_segm)
 - [Evaluate localization performance](#eval)
+	-[Calculate percentage decrease](#pct_dec)
 - [Compute pathology features](#path_features)
 	- [Plot distribution of pathology features](#dist_path_features)
 - [Run regressions on pathology features](#regression_pathology)
@@ -297,6 +298,21 @@ This evaluation script generates three csv files:
 * `{iou/hitmiss}_results_per_cxr.csv`: IoU or hit/miss results for each CXR and each pathology.
 * `{iou/hitmiss}_bootstrap_results.csv`: 1000 bootstrap samples of IoU or hit/miss for each pathology.
 * `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
+
+<a name="pct_dec"></a>
+### Calculate percentage decrease
+
+To calculate the percentage decrease from the human benchmark localization metric to the saliency method pipeline localization metric, run:
+
+```
+(chexlocalize) > python calculate_percentage_decrease.py [FLAGS]
+```
+
+**Required flags**
+* `--metric`: options are `miou` or `hitrate`
+* `--hb_bootstrap_results`: Path to csv file with 1000 bootstrap samples of human benchmark IoU or hit/miss for each pathology. This is the output of `eval.py` called `{iou/hitmiss}_humanbenchmark_bootstrap_results_per_cxr.csv`.
+* `--pred_bootstrap_results`: Path to csv file with 1000 bootstrap samples of saliency method IoU or hit/miss for each pathology. This is the output of `eval.py` called `{iou/hitmiss}_bootstrap_results_per_cxr.csv`.
+* `--save_dir`: Where to save results as csv files. Default is current directory.
 
 <a name="path_features"></a>
 ## Compute pathology features
