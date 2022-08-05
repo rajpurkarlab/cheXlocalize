@@ -1,7 +1,11 @@
 """
-When evaluating mIoU on the full dataset, we ensure that the final binary segmentation is consistent with model probability output by applying another layer of thresholding such that the segmentation mask is all zeros if the predicted probability is below a chosen level.
+When evaluating mIoU on the full dataset, we ensure that the final binary
+segmentation is consistent with model probability output by applying another
+layer of thresholding such that the segmentation mask is all zeros if the
+predicted probability is below a chosen level.
 
-The probability threshold is determined per pathology by maximizing the mIoU on the validation set.
+The probability threshold is determined per pathology by maximizing the
+mIoU on the validation set.
 """
 from argparse import ArgumentParser
 import glob
