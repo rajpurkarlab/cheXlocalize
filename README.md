@@ -14,12 +14,13 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 	- [Fine-tune probability thresholds](#prob_threshold)
 - [Generate segmentations from human annotations](#ann_to_segm)
 - [Evaluate localization performance](#eval)
-	-[Calculate percentage decrease](#pct_dec)
+	- [Calculate percentage decrease](#pct_dec)
 - [Compute pathology features](#path_features)
 	- [Plot distribution of pathology features](#dist_path_features)
 - [Run regressions on pathology features](#regression_pathology)
 - [Run regressions on model assurance](#regression_model_assurance)
 - [Get precision, recall/sensitivity, and specificity values](#precision_recall)
+- [Bugs or questions?](#bugs)
 - [Citation](#citation)
 
 
@@ -165,13 +166,13 @@ To find the thresholds that maximize mIoU for each pathology on the validation s
 **Optional flags**
 * `--save_dir`: the directory to save the csv file that stores the tuned thresholds. Default is current directory.
 
-This script will replicate `./sample/tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
+This script will replicate `./sample/tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json` as `<gt_path>`. Running this script should take about one hour.
 
 <a name="prob_threshold"></a>
 ### Fine-tune probability thresholds
 We noticed that for many CXRs false positive saliency segmentations were generated even though model probability was low. To ensure that the saliency segmentation is consistent with model probability output, we apply a logic such that the segmentation mask is all zeros if the predicted probability was below a chosen cutoff. To choose these cutoffs for each pathology, we maximize the mIoU on the validation set.
 
-To create the csv file with these cutoffs (and that should be used with the flag `--probability_threshold_path` for `heatmap_to_segmentation.py`), run:
+To create the csv file with these cutoffs (which should be used with the flag `--probability_threshold_path` for `heatmap_to_segmentation.py`), run:
 
 ```
 (chexlocalize) > python tune_probability_threshold.py [FLAGS]
@@ -184,9 +185,9 @@ To create the csv file with these cutoffs (and that should be used with the flag
 **Optional flags**
 * `--save_dir`: the directory to save the csv file that stores the tuned thresholds. Default is current directory.
 
-In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4 because when evaluating localization performance using the full dataset, we found that many false postive saliency segmentations were generated even though model probability was low. In practice, when evaluation only uses the true positve slice of the dataset, we recommend that users use `<threshold_path>` to find the best thresholds because in this scenario we are not accounting for false positives.
+In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4 because when evaluating localization performance using the full dataset, we found that many false postive saliency segmentations were generated even though model probability was low. When evaluation only uses the true positive slice of the dataset, we recommend using `<threshold_path>` to find the best thresholds since we're not accounting for false positives.
 
-This script will replicate `./sample/probability_tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json`. Running this script should take about one hour.
+This script will replicate `./sample/probability_tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json` as `<gt_path>`. Running this script should take about one hour.
 
 <a name="ann_to_segm"></a>
 ## Generate segmentations from human annotations
@@ -297,7 +298,7 @@ Both `pred_path` (if `metric = iou`) and `gt_path` json files must contain a key
 This evaluation script generates three csv files:
 * `{iou/hitmiss}_results_per_cxr.csv`: IoU or hit/miss results for each CXR and each pathology.
 * `{iou/hitmiss}_bootstrap_results.csv`: 1000 bootstrap samples of IoU or hit/miss for each pathology.
-* `{miou/hitrate}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
+* `{iou/hitmiss}_summary_results.csv`: mIoU or hit rate 95% bootstrap confidence intervals for each pathology.
 
 <a name="pct_dec"></a>
 ### Calculate percentage decrease
@@ -312,6 +313,8 @@ To calculate the percentage decrease from the human benchmark localization metri
 * `--metric`: options are `miou` or `hitrate`
 * `--hb_bootstrap_results`: Path to csv file with 1000 bootstrap samples of human benchmark IoU or hit/miss for each pathology. This is the output of `eval.py` called `{iou/hitmiss}_humanbenchmark_bootstrap_results_per_cxr.csv`.
 * `--pred_bootstrap_results`: Path to csv file with 1000 bootstrap samples of saliency method IoU or hit/miss for each pathology. This is the output of `eval.py` called `{iou/hitmiss}_bootstrap_results_per_cxr.csv`.
+
+**Optional flags**
 * `--save_dir`: Where to save results as csv files. Default is current directory.
 
 <a name="path_features"></a>
@@ -385,7 +388,8 @@ We provide a script to run a simple linear regression for each pathology using t
 * `--pred_hitmiss_results`: path to csv file with saliency method hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitmiss_results_per_cxr.csv`.
 
 **Optional flags**
-* `--save_dir`: Where to save regression results. Default is current directory. If `evaluate_hb` is `True`, four files will be saved: `regression_features_pred_iou.csv`, `regression_features_pred_hitmiss.csv`, `regression_features_iou_diff.csv`, `regression_features_hitmiss_diff.csv`. If `evaluate_hb` is `False`, only two files will be saved: `regression_features_pred_iou.csv`, `regression_features_pred_hitmiss.csv`.
+* `--save_dir`: Where to save regression results. Default is current directory.
+
 Note that in [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), for each of the 11 regressions, we use the _full_ dataset since the analysis of false positives and false negatives was also of interest (see Table 3). In addition to the linear regression coefficients, the regression results also report the Spearman correlation coefficients to capture any potential non-linear associations.
 
 <a name="precision_recall"></a>
@@ -406,6 +410,10 @@ To get the precision, recall/sensitivity, and specificity values of the saliency
 * `--save_dir`: the directory to save the csv file that stores the precision, recall/sensitivity, and specificity values. Default is current directory.
 
 We treat each pixel in the saliency method pipeline and the human benchmark segmentations as a classification, use each pixel in the ground-truth segmentation as the ground-truth label, and calculate precision, recall/sensitivity, and specificity over all CXRs for each pathology.
+
+<a name="bugs"></a>
+## Bugs or questions?
+Feel free to email Adriel Saporta (adriel@nyu.edu), or to open an issue in this repo, with any questions related to the code or our paper.
 
 <a name="citation"></a>
 ## Citation
