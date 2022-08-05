@@ -19,7 +19,7 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 	- [Plot distribution of pathology features](#dist_path_features)
 - [Run regressions on pathology features](#regression_pathology)
 - [Run regressions on model assurance](#regression_model_assurance)
-- [Get precision and recall values](#precision_recall)
+- [Get precision, recall/sensitivity, and specificity values](#precision_recall)
 - [Citation](#citation)
 
 
@@ -389,12 +389,12 @@ We provide a script to run a simple linear regression for each pathology using t
 Note that in [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), for each of the 11 regressions, we use the _full_ dataset since the analysis of false positives and false negatives was also of interest (see Table 3). In addition to the linear regression coefficients, the regression results also report the Spearman correlation coefficients to capture any potential non-linear associations.
 
 <a name="precision_recall"></a>
-## Get precision and recall values
+## Get precision, recall/sensitivity, and specificity values
 
-To get the precision and recall values of the saliency method pipeline and the human benchmark segmentations, run:
+To get the precision, recall/sensitivity, and specificity values of the saliency method pipeline and the human benchmark segmentations, run:
 
 ```
-(chexlocalize) > python precision_recall.py [FLAGS]
+(chexlocalize) > python precision_recall_specificity.py [FLAGS]
 ```
 
 **Required flags**
@@ -403,9 +403,9 @@ To get the precision and recall values of the saliency method pipeline and the h
 * `--hb_seg_path`: the json file path where human benchmark segmentations are saved (encoded). This could be the json output of `annotation_to_segmentation.py`.
 
 **Optional flags**
-* `--save_dir`: the directory to save the csv file that stores the precision and recall values. Default is current directory.
+* `--save_dir`: the directory to save the csv file that stores the precision, recall/sensitivity, and specificity values. Default is current directory.
 
-We treat each pixel in the saliency method pipeline and the human benchmark segmentations as a classification, use each pixel in the ground-truth segmentation as the ground-truth label, and calculate the precision and recall over all CXRs for each pathology.
+We treat each pixel in the saliency method pipeline and the human benchmark segmentations as a classification, use each pixel in the ground-truth segmentation as the ground-truth label, and calculate precision, recall/sensitivity, and specificity over all CXRs for each pathology.
 
 <a name="citation"></a>
 ## Citation

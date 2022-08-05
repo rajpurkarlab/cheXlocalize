@@ -10,12 +10,13 @@ from eval_constants import LOCALIZATION_TASKS
 from heatmap_to_segmentation import pkl_to_mask
 
 
-def get_results(gt_dict, hb_path):
+def get_results(gt_dict, seg_path):
     """
-    TODO: add comment
+    For each pathology, count the total number of pixels that are TP, TN, FP
+    and FN. Only include CXRs that have ground-truth segmentations.
     """
-    with open(hb_path) as f:
-        hb_dict = json.load(f)
+    with open(seg_path) as f:
+        seg_dict = json.load(f)
 
     results = {}
     all_ids = sorted(gt_dict.keys())
@@ -26,35 +27,40 @@ def get_results(gt_dict, hb_path):
             gt_item = gt_dict[img_id][task]
             gt_mask = mask.decode(gt_item)
 
-            if img_id not in hb_dict:
-                hb_mask = np.zeros(gt_mask.shape)
+            if img_id not in seg_dict:
+                seg_mask = np.zeros(gt_mask.shape)
             else:
-                hb_item = hb_dict[img_id][task]
-                hb_mask = mask.decode(hb_item)
+                seg_item = seg_dict[img_id][task]
+                seg_mask = mask.decode(seg_item)
 
-            TP = np.sum(gt_mask == hb_mask)
-            FP = np.sum(np.logical_and(hb_mask == 1, gt_mask == 0))
-            FN = np.sum(np.logical_and(hb_mask == 0, gt_mask == 1))
-            # append to big numpy array 
+            TP = np.sum(np.logical_and(seg_mask == 1, gt_mask == 1))
+            TN = np.sum(np.logical_and(seg_mask == 0, gt_mask == 0))
+            FP = np.sum(np.logical_and(seg_mask == 1, gt_mask == 0))
+            FN = np.sum(np.logical_and(seg_mask == 0, gt_mask == 1))
+
             if task in results:
                 results[task]['tp'] += TP
+                results[task]['tn'] += TN
                 results[task]['fp'] += FP
                 results[task]['fn'] += FN
             else:
                 results[task] = {}
-                results[task]['tp'] = TP 
+                results[task]['tp'] = TP
+                results[task]['tn'] = TN
                 results[task]['fp'] = FP
                 results[task]['fn'] = FN
     return results
 
 
-def calculate_precision_recall(dict_item):
+def calculate_precision_recall_specificity(dict_item):
     TP = dict_item['tp']
+    TN = dict_item['tn']
     FP = dict_item['fp']
     FN = dict_item['fn']
-    p = TP/(TP+FP)
-    r = TP/(TP+FN)
-    return p, r
+    precision = TP/(TP+FP)
+    recall = TP/(TP+FN)
+    specificity = TN/(TN+FP)
+    return precision, recall, specificity
 
 
 def main(args):
@@ -66,16 +72,19 @@ def main(args):
         results = get_results(gt_dict, seg_path)
         precisions = []
         recalls = []
+        specificities = []
         for t in sorted(LOCALIZATION_TASKS):
-            p, r = calculate_precision_recall(results[t])
+            p, r, s = calculate_precision_recall_specificity(results[t])
             precisions.append(p)
             recalls.append(r)
+            specificities.append(s)
 
-        df = pd.DataFrame(columns = ['pathology', 'precision', 'recall'])
+        df = pd.DataFrame()
         df['pathology'] = sorted(LOCALIZATION_TASKS)
         df['precision'] = precisions
-        df['recall'] = recalls
-        df.to_csv(f'{args.save_dir}/{source}_precision_recall.csv')
+        df['recall/sensitivity'] = recalls
+        df['specificity'] = specificities
+        df.to_csv(f'{args.save_dir}/{source}_precision_recall_specificity.csv')
 
 
 if __name__ == '__main__':
