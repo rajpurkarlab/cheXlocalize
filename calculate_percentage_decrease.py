@@ -61,8 +61,8 @@ def create_pct_diff_df(metric, pred_bootstrap_results, hb_bootstrap_results,
 
     pct_diff_df.loc['Average'] = {'pred': avg_pred, 'hb': avg_hb,
                                   'pct_diff': avg_pct_diff,
-                                  'perct_diff_lower': round(lower, 3),
-                                  'perct_diff_upper': round(upper, 1)}
+                                  'pct_diff_lower': round(lower, 3),
+                                  'pct_diff_upper': round(upper, 3)}
     print(pct_diff_df)
     pct_diff_df.to_csv(f'{save_dir}/{metric}_pct_decrease.csv')
 
