@@ -1,6 +1,6 @@
 # CheXlocalize
 
-This repository contains the code used to generate segmentations from saliency method heatmaps and human annotations, and to evaluate the localization performance of those segmentations, as described in the paper [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3.full.pdf).
+This repository contains the code used to generate segmentations from saliency method heatmaps and human annotations, and to evaluate the localization performance of those segmentations, as described in the paper [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v4.full.pdf).
 
 You may run the scripts in this repo using your own heatmaps/annotations/segmentations, or you may run them on the [CheXlocalize dataset](https://stanfordaimi.azurewebsites.net/datasets/abfb76e5-70d5-4315-badc-c94dd82e3d6d).
 
@@ -35,7 +35,7 @@ While deep learning has enabled automated medical imaging interpretation at a le
 
 The validation and test sets consist of 234 chest X-rays from 200 patients and 668 chest X-rays from 500 patients, respectively. The 10 pathologies of interest are Atelectasis, Cardiomegaly, Consolidation, Edema, Enlarged Cardiomediastinum, Lung Lesion, Lung Opacity, Pleural Effusion, Pneumothorax, and Support Devices.
 
-For more details, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
+For more details, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v4).
 
 <a name="setup"></a>
 ## Setup
@@ -185,7 +185,7 @@ To create the csv file with these cutoffs (which should be used with the flag `-
 **Optional flags**
 * `--save_dir`: the directory to save the csv file that stores the tuned thresholds. Default is current directory.
 
-In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4 because when evaluating localization performance using the full dataset, we found that many false postive saliency segmentations were generated even though model probability was low. When evaluation only uses the true positive slice of the dataset, we recommend using `<threshold_path>` to find the best thresholds since we're not accounting for false positives.
+In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v4), we use these cutoffs to report results in Table 3 and Extended Data Fig. 4 because when evaluating localization performance using the full dataset, we found that many false postive saliency segmentations were generated even though model probability was low. When evaluation only uses the true positive slice of the dataset, we recommend using `<threshold_path>` to find the best thresholds since we're not accounting for false positives.
 
 This script will replicate `./sample/probability_tuning_results.csv` when you use the CheXlocalize validation set DenseNet121 + Grad-CAM heatmaps in `/cheXlocalize_dataset/gradcam_maps_val/` as `<map_dir>` and the validation set ground-truth pixel-level segmentations in `/cheXlocalize_dataset/gt_segmentations_val.json` as `<gt_path>`. Running this script should take about one hour.
 
@@ -252,7 +252,7 @@ We use two evaluation metrics to compare segmentations:
 ![metrics](/img/metrics.png)
 > Left: CXR with ground-truth and saliency method annotations for Pleural Effusion. The segmentations have a low overlap (IoU is 0.078), but pointing game is a "hit" since the saliency method's most representative point is inside of the ground-truth segmentation. Right, CXR with ground-truth and human benchmark annotations for Enlarged Cardiomediastinum. The segmentations have a high overlap (IoU is 0.682), but pointing game is a "miss" since saliency method's most representative point is outside of the ground-truth segmentation.
 
-For more details on mIoU and hit rate, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3).
+For more details on mIoU and hit rate, please see our paper, [_Benchmarking saliency methods for chest X-ray interpretation_](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v4).
 
 To run evaluation, use the following command:
 
@@ -372,7 +372,7 @@ We provide a script to run a simple linear regression with the evaluation metric
 * `--hb_hitmiss_results`: Path to csv file with human benchmark hit/miss results for each CXR and each pathology. This is the output of `eval.py` called `hitmiss_humanbenchmark_results_per_cxr.csv`.
 * `--save_dir`: Where to save regression results. Default is current directory. If `evaluate_hb` is `True`, four files will be saved: `regression_features_pred_iou.csv`, `regression_features_pred_hitmiss.csv`, `regression_features_iou_diff.csv`, `regression_features_hitmiss_diff.csv`. If `evaluate_hb` is `False`, only two files will be saved: `regression_features_pred_iou.csv`, `regression_features_pred_hitmiss.csv`.
 
-In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), only the true positive slice was included in each regression (see Table 2). Each feature is normalized using min-max normalization and the regression coefficient can be interpreted as the effect of that geometric feature on the evaluation metric at hand. The regression results report the 95% confidence interval and the Bonferroni corrected p-values. For confidence intervals and p-values, we use the standard calculation for linear models.
+In [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v4), only the true positive slice was included in each regression (see Table 2). Each feature is normalized using min-max normalization and the regression coefficient can be interpreted as the effect of that geometric feature on the evaluation metric at hand. The regression results report the 95% confidence interval and the Bonferroni corrected p-values. For confidence intervals and p-values, we use the standard calculation for linear models.
 
 <a name="regression_model_assurance"></a>
 ## Run regressions on model assurance
@@ -390,7 +390,7 @@ We provide a script to run a simple linear regression for each pathology using t
 **Optional flags**
 * `--save_dir`: Where to save regression results. Default is current directory.
 
-Note that in [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v3), for each of the 11 regressions, we use the _full_ dataset since the analysis of false positives and false negatives was also of interest (see Table 3). In addition to the linear regression coefficients, the regression results also report the Spearman correlation coefficients to capture any potential non-linear associations.
+Note that in [our paper](https://www.medrxiv.org/content/10.1101/2021.02.28.21252634v4), for each of the 11 regressions, we use the _full_ dataset since the analysis of false positives and false negatives was also of interest (see Table 3). In addition to the linear regression coefficients, the regression results also report the Spearman correlation coefficients to capture any potential non-linear associations.
 
 <a name="precision_recall"></a>
 ## Get precision, recall/sensitivity, and specificity values
