@@ -233,7 +233,7 @@ Each pathology key (e.g. `json_dict['patient64622_study1_view1_frontal']['Suppor
 
 Each contour holds a list of [X,Y] coordinates that contour the shape of the pathology.
 
-This input json should include only those CXRs with at least one positive ground-truth label, and each CXR in the json should include only those pathologies for which its ground-truth label is positive.
+This input json should include only those CXRs with at least one positive ground-truth label, and each CXR in the json should include only those pathologies for which its ground-truth label is positive. (So `/cheXlocalize_dataset/gt_annotations_val.json` will have keys for 187 subjects with 643 total annotations.)
 
 If using your own human annotations, please be sure to save them in a json using the above formatting.
 
