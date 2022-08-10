@@ -293,7 +293,11 @@ If `metric = iou`, both `pred_path` and `gt_path` must be json files where each 
 }
 ```
 
-Both `pred_path` (if `metric = iou`) and `gt_path` json files must contain a key for all CXR ids (regardless of whether it has any positive ground-truth labels), and each CXR id key must have values for all ten pathologies (regardless of ground-truth label). In other words, all CXRs and images are indexed. If a CXR has no segmentations, we store a segmentation mask of all zeros. If using your own `pred_path` and `gt_path` json files as input to this script, be sure that they are formatted per the above, with segmentation masks encoded using RLE using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
+The `pred_path` (if `metric = iou`) json file must contain a key for all CXR ids (regardless of whether it has any positive ground-truth labels), and each CXR id key must have values for all ten pathologies (regardless of ground-truth label). In other words, all CXRs and images are indexed. If a CXR has no segmentations, we store a segmentation mask of all zeros.
+
+The `gt_path` json file should include only those CXRs with at least one positive ground-truth label. However, each CXR id key must have values for all ten pathologies (regardless of ground-truth label). (So `/cheXlocalize_dataset/gt_segmentations_val.json` will have keys for 187 subjects.)
+
+If using your own `pred_path` or `gt_path` json file as input to this script, be sure that it is formatted per the above, with segmentation masks encoded using RLE using [pycocotools](https://github.com/cocodataset/cocoapi/tree/master/PythonAPI/pycocotools).
 
 This evaluation script generates three csv files:
 * `{iou/hitmiss}_results_per_cxr.csv`: IoU or hit/miss results for each CXR and each pathology.
