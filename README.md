@@ -423,7 +423,4 @@ Feel free to email Adriel Saporta (adriel@nyu.edu), or to open an issue in this 
 ## Citation
 
 If you are using the CheXlocalize dataset, or are using our code in your research, please cite our paper:
-
-```
-Saporta, A., Gui, X., Agrawal, A. et al. Benchmarking saliency methods for chest X-ray interpretation. Nature Machine Intelligence (2022). https://doi.org/10.1038/s42256-022-00536-x
-```
+>Saporta, A., Gui, X., Agrawal, A. et al. Benchmarking saliency methods for chest X-ray interpretation. Nature Machine Intelligence (2022). https://doi.org/10.1038/s42256-022-00536-x
