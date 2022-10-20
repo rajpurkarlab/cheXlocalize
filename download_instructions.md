@@ -42,7 +42,7 @@ Note that this link cannot be used directly in a browser. We recommend using [Az
 
 ---
 
-You'll be asked to select an Azure resource to connect to; select _Blob container_.
+You'll be asked to select an Azure resource to connect to. Select _Blob container_.
 
 ---
 
@@ -50,7 +50,7 @@ You'll be asked to select an Azure resource to connect to; select _Blob containe
 
 ---
 
-You'll be asked to select a connection method; select _Shared access signature URL (SAS)_.
+You'll be asked to select a connection method. Select _Shared access signature URL (SAS)_.
 
 ---
 
