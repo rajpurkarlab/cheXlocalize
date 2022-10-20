@@ -6,7 +6,7 @@ First, login or create an account with StanfordAIMI.
 
 ---
 
-![login](/img/login.jpeg){ width=50% }
+![login](/img/login.jpeg)
 
 ---
 
@@ -19,6 +19,7 @@ You should then see this link to download the dataset. Click this link. (Note th
 ---
 
 You'll see a registration form pop up. Fill it out, accept the terms of agreement, and click Submit.
+
 ---
 
 ![register](/img/register.png)
@@ -27,26 +28,50 @@ You'll see a registration form pop up. Fill it out, accept the terms of agreemen
 
 You should then see a pop up with a dataset download link.
 
+---
+
 ![downloadlink](/img/downloadlink.jpeg)
 
-> Note that this link cannot be used directly in a browser. We recommend using [Azure Storage Explorer](https://azure.microsoft.com/en-us/products/storage/storage-explorer/) to download the dataset. Download and open Azure Storage Explorer, and click on the plug icon that reads _Connect to Azure resources_.
+---
+
+Note that this link cannot be used directly in a browser. We recommend using [Azure Storage Explorer](https://azure.microsoft.com/en-us/products/storage/storage-explorer/) to download the dataset. Download and open Azure Storage Explorer, and click on the plug icon that reads _Connect to Azure resources_.
+
+---
 
 ![connectazure](/img/connectazure.jpeg)
 
-> You'll be asked to select an Azure resource to connect to; select _Blob container_.
+---
+
+You'll be asked to select an Azure resource to connect to; select _Blob container_.
+
+---
 
 ![resource](/img/resource.jpeg)
 
-> You'll be asked to select a connection method; select _Shared access signature URL (SAS)_.
+---
+
+You'll be asked to select a connection method; select _Shared access signature URL (SAS)_.
+
+---
 
 ![connection](/img/connection.jpeg)
 
-> You'll be asked to enter connection info. In the box named _Blob container SAS URL_ enter the data download link given by the StanfordAIMI website above. The _Display name_ will automatically fill in. Click next.
+---
+
+You'll be asked to enter connection info. In the box named _Blob container SAS URL_ enter the data download link given by the StanfordAIMI website above. The _Display name_ will automatically fill in. Click next.
+
+---
 
 ![enterlink](/img/enterlink.jpeg)
 
-> You should then see the CheXlocalize and CheXpert folders available in Azure Storage Explorer, with a download link you can use to download both folders.
+---
+
+You should then see the CheXlocalize and CheXpert folders available in Azure Storage Explorer, with a download link you can use to download both folders.
+
+---
 
 ![azuredownload](/img/azuredownload.jpeg)
 
-> Feel free to email Adriel Saporta (adriel@nyu.edu), or to open an issue in this repo, with any questions.
+---
+
+Feel free to email Adriel Saporta (adriel@nyu.edu), or to open an issue in this repo, with any questions.
