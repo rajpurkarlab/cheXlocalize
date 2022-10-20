@@ -6,11 +6,11 @@ First, login or create an account with StanfordAIMI.
 
 ---
 
-![login](/img/login.jpeg)
+<img src="img/login.jpeg" width="350"/>
 
 ---
 
-You should then see this link to download the dataset. Click this link. (Note that you may not be able to see this button using Firefox as a browser, but it should certainly work on Google Chrome.)
+You should then see this link to download the dataset. Click this link. (Note that you may not be able to see this button using Firefox as a browser, but it should work on Google Chrome.)
 
 ---
 
