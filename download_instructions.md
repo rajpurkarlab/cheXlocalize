@@ -3,9 +3,10 @@
 The CheXlocalize dataset can be found [here](https://stanfordaimi.azurewebsites.net/datasets/23c56a0d-15de-405b-87c8-99c30138950c).
 
 First, login or create an account with StanfordAIMI.
+
 ---
 
-![login](/img/login.jpeg)
+![login](/img/login.jpeg){ width=50% }
 
 ---
 
