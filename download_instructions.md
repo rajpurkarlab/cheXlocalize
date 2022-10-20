@@ -6,7 +6,7 @@ First, login or create an account with StanfordAIMI.
 
 ---
 
-<img src="img/login.jpeg" width="350"/>
+<img src="img/login.jpeg" width="600"/>
 
 ---
 
@@ -14,7 +14,7 @@ You should then see this link to download the dataset. Click this link. (Note th
 
 ---
 
-![downloadaimi](/img/downloadaimi.jpeg)
+<img src="img/downloadaimi.jpeg" width="600"/>
 
 ---
 
@@ -22,7 +22,7 @@ You'll see a registration form pop up. Fill it out, accept the terms of agreemen
 
 ---
 
-![register](/img/register.png)
+<img src="img/register.jpeg" width="600"/>
 
 ---
 
@@ -30,7 +30,7 @@ You should then see a pop up with a dataset download link.
 
 ---
 
-![downloadlink](/img/downloadlink.jpeg)
+<img src="img/downloadlink.jpeg" width="600"/>
 
 ---
 
@@ -38,7 +38,7 @@ Note that this link cannot be used directly in a browser. We recommend using [Az
 
 ---
 
-![connectazure](/img/connectazure.jpeg)
+<img src="img/connectazure.jpeg" width="600"/>
 
 ---
 
@@ -46,7 +46,7 @@ You'll be asked to select an Azure resource to connect to; select _Blob containe
 
 ---
 
-![resource](/img/resource.jpeg)
+<img src="img/resource.jpeg" width="600"/>
 
 ---
 
@@ -54,7 +54,7 @@ You'll be asked to select a connection method; select _Shared access signature U
 
 ---
 
-![connection](/img/connection.jpeg)
+<img src="img/connection.jpeg" width="600"/>
 
 ---
 
@@ -62,7 +62,7 @@ You'll be asked to enter connection info. In the box named _Blob container SAS U
 
 ---
 
-![enterlink](/img/enterlink.jpeg)
+<img src="img/enterlink.jpeg" width="600"/>
 
 ---
 
@@ -70,7 +70,7 @@ You should then see the CheXlocalize and CheXpert folders available in Azure Sto
 
 ---
 
-![azuredownload](/img/azuredownload.jpeg)
+<img src="img/azuredownload.jpeg" width="600"/>
 
 ---
 
