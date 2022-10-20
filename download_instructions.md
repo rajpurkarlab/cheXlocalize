@@ -3,6 +3,7 @@
 The CheXlocalize dataset can be found [here](https://stanfordaimi.azurewebsites.net/datasets/23c56a0d-15de-405b-87c8-99c30138950c).
 
 First, login or create an account with StanfordAIMI.
+---
 
 ![login](/img/login.jpeg)
 
@@ -10,13 +11,20 @@ First, login or create an account with StanfordAIMI.
 
 You should then see this link to download the dataset. Click this link. (Note that you may not be able to see this button using Firefox as a browser, but it should certainly work on Google Chrome.)
 
+---
+
 ![downloadaimi](/img/downloadaimi.jpeg)
 
-> You'll see a registration form pop up. Fill it out, accept the terms of agreement, and click Submit.
+---
+
+You'll see a registration form pop up. Fill it out, accept the terms of agreement, and click Submit.
+---
 
 ![register](/img/register.png)
 
-> You should then see a pop up with a dataset download link.
+---
+
+You should then see a pop up with a dataset download link.
 
 ![downloadlink](/img/downloadlink.jpeg)
 
