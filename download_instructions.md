@@ -22,7 +22,7 @@ You'll see a registration form pop up. Fill it out, accept the terms of agreemen
 
 ---
 
-<img src="img/register.jpeg" width="600"/>
+<img src="img/register.png" width="600"/>
 
 ---
 
