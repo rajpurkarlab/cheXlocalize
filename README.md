@@ -57,7 +57,9 @@ Install all dependency packages using the following command:
 
 You may run the scripts in this repo using your own heatmaps/annotations/segmentations, or you may run them on the CheXlocalize dataset.
 
-Download the CheXlocalize dataset [here](https://stanfordaimi.azurewebsites.net/datasets/23c56a0d-15de-405b-87c8-99c30138950c). You'll find:
+Download the CheXlocalize dataset [here](https://stanfordaimi.azurewebsites.net/datasets/23c56a0d-15de-405b-87c8-99c30138950c). Instructions for downloading the dataset can be found [here](https://github.com/rajpurkarlab/cheXlocalize/tree/master/download_instructions.md).
+
+The dataset contains:
 
 * `CheXpert-v1.0/valid/`: validation set CXR images
 * `CheXpert-v1.0/valid.csv`: validation set ground-truth labels
