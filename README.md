@@ -61,12 +61,19 @@ Download the CheXlocalize dataset [here](https://stanfordaimi.azurewebsites.net/
 
 The dataset contains:
 
-* `CheXpert-v1.0/valid/`: validation set CXR images
-* `CheXpert-v1.0/valid.csv`: validation set ground-truth labels
-* `gradcam_maps_val/`: validation set DenseNet121 + Grad-CAM heatmaps
-* `gradcam_segmentations_val.json`: validation set DenseNet121 + Grad-CAM pixel-level segmentations
-* `gt_annotations_val.json`: validation set ground-truth raw radiologist annotations
-* `gt_segmentations_val.json`: validation set ground-truth pixel-level segmentations
+* `CheXpert/val/`: CheXpert validation set CXR images
+* `CheXpert/val_labels.csv`: CheXpert validation set ground-truth labels
+* `CheXpert/test/`: CheXpert test set CXR images
+* `CheXpert/test_labels.csv`: CheXpert test set ground-truth labels
+* `CheXlocalize/gradcam_maps_val/`: validation set DenseNet121 + Grad-CAM heatmaps
+* `CheXlocalize/gradcam_segmentations_val.json`: validation set DenseNet121 + Grad-CAM pixel-level segmentations
+* `CheXlocalize/gt_annotations_val.json`: validation set ground-truth raw radiologist annotations
+* `CheXlocalize/gt_annotations_test.json`: test set ground-truth raw radiologist annotations
+* `CheXlocalize/gt_segmentations_val.json`: validation set ground-truth pixel-level segmentations
+* `CheXlocalize/gt_segmentations_test.json`: test set ground-truth pixel-level segmentations
+* `CheXlocalize/hb_annotations_test.json`: test set human benchmark raw radiologist annotations
+* `CheXlocalize/hb_salient_pt_test.json`: test set human benchmark raw radiologist most salient points
+* `CheXlocalize/hb_segmentations_test.json`: test set human benchmark pixel-level segmentations
 
 We have also included a small sample of the above data in this repo in [`./sample`](https://github.com/rajpurkarlab/cheXlocalize/tree/master/sample).
 
