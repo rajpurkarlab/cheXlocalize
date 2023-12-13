@@ -4,6 +4,8 @@ This repository contains the code used to generate segmentations from saliency m
 
 You may run the scripts in this repo using your own heatmaps/annotations/segmentations, or you may run them on the [CheXlocalize dataset](https://stanfordaimi.azurewebsites.net/datasets/23c56a0d-15de-405b-87c8-99c30138950c).
 
+We release the weights of all models trained and used for our work on [PhysioNet](). Details on model weights and training can be found [here](#weights).
+
 ### Table of Contents
 - [Overview](#overview)
 - [Setup](#setup)
@@ -20,6 +22,7 @@ You may run the scripts in this repo using your own heatmaps/annotations/segment
 - [Run regressions on pathology features](#regression_pathology)
 - [Run regressions on model assurance](#regression_model_assurance)
 - [Get precision, recall/sensitivity, and specificity values](#precision_recall)
+- [Model training and weights](#weights)
 - [Bugs or questions?](#bugs)
 - [Citation](#citation)
 
@@ -423,6 +426,17 @@ To get the precision, recall/sensitivity, and specificity values of the saliency
 * `--save_dir`: the directory to save the csv file that stores the precision, recall/sensitivity, and specificity values. Default is current directory.
 
 We treat each pixel in the saliency method pipeline and the human benchmark segmentations as a classification, use each pixel in the ground-truth segmentation as the ground-truth label, and calculate precision, recall/sensitivity, and specificity over all CXRs for each pathology.
+
+<a name="weights"></a>
+## Model weights and training
+
+We ran experiments using three CNN architectures previously used on CheXpert: DenseNet121, ResNet152 and Inception-v4. For each combination of saliency method and model architecture, we trained and evaluated an ensemble of 30 CNNs.
+
+To capture uncertainties inherent in radiograph interpretation, we trained our models using the four uncertainty handling strategies outlined in the CheXpert paper: ignoring, zeros, ones, and three-class classification.
+
+All checkpoints can be found [here](https://drive.google.com/drive/folders/17nUAxXGskc2a6_CxfoYpixnhsm8VLjy6?usp=sharing). There are 120 checkpoints for each model architecture, and each architecture folder is structured in the same way. For example, in the folder `densenet121`, there is a folder `uncertainty` that has 12 folders, each with 10 checkpoints. For each of the four uncertainty handling strategies, we trained the model 3 separate times with 3 epochs each time; each of the runs saved the top 10 checkpoints. This means that for each of the four uncertainty handling strategies, we had 30 checkpoints. Therefore, in total, there are 4*30=120 checkpoints. In that same folder `densenet121`, there is a final.json file, which lists the best 10 checkpoints for each task.
+
+The [same folder](https://drive.google.com/drive/folders/17nUAxXGskc2a6_CxfoYpixnhsm8VLjy6?usp=sharing) also has two files: `gradcam.py` with our Grad-CAM implementation, and `models.py` that specifies the models used (including the layers to which Grad-CAM was applied).
 
 <a name="bugs"></a>
 ## Bugs or questions?
